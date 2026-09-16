@@ -11,13 +11,11 @@ import {
 import { Router } from '@angular/router';
 
 import { GameStateService } from '../../core/game-state.service';
-import { CellNumber } from '../../models/game.models';
+import { CELL_NUMBERS, CellNumber } from '../../models/game.models';
 import {
   ImageGrid,
   ImageGridCellView,
 } from '../../shared/image-grid/image-grid';
-
-const CELL_NUMBERS = Array.from({ length: 100 }, (_, index) => index + 1);
 
 @Component({
   selector: 'app-setup-page',
@@ -103,13 +101,10 @@ export class SetupPage {
 
   protected async importFiles(event: Event): Promise<void> {
     const input = event.currentTarget as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
     this.setupNotice.set('');
 
     try {
-      if (files.length > 0) {
-        await this.game.importFiles(files);
-      }
+      await this.game.importFiles(input.files ?? []);
     } finally {
       input.value = '';
     }

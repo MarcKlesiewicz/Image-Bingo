@@ -1,0 +1,103 @@
+<article
+  class="results-page"
+  [class.red-winner]="game.winner() === 'red'"
+  [class.blue-winner]="game.winner() === 'blue'"
+  [class.draw-result]="game.winner() === 'draw'"
+  aria-labelledby="results-heading"
+>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+    {{ liveAnnouncement() }}
+  </p>
+
+  <header class="finale-card">
+    <div class="finale-copy">
+      <p class="eyebrow">Game complete · {{ game.completedRounds().length }} rounds played</p>
+      <h1 id="results-heading" #resultsHeading tabindex="-1">{{ outcomeTitle() }}</h1>
+      <p class="outcome-summary">{{ outcomeSummary() }}</p>
+    </div>
+
+    <div class="winner-seal" aria-hidden="true">
+      <span>{{ outcomeIcon() }}</span>
+      <small>
+        @if (game.winner() === 'draw') {
+          Draw
+        } @else {
+          Winner
+        }
+      </small>
+    </div>
+  </header>
+
+  <p class="result-announcement" role="status" aria-live="polite" aria-atomic="true">
+    <span aria-hidden="true">🏆</span>
+    {{ resultAnnouncement() }}
+  </p>
+
+  <section class="score-card" aria-labelledby="final-score-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Full-time scoreboard</p>
+        <h2 id="final-score-heading">Final score</h2>
+      </div>
+      <p>{{ game.deck().length }} {{ game.deck().length === 1 ? 'image' : 'images' }} in the configured deck</p>
+    </div>
+
+    <div class="final-scores" role="group" aria-label="Final team scores">
+      <section class="team-score red-score" [class.is-winner]="game.winner() === 'red'" aria-labelledby="red-score-heading">
+        <h3 id="red-score-heading"><span aria-hidden="true">▲</span> Red team</h3>
+        <p class="score" [attr.aria-label]="game.scores().red + ' points'">{{ game.scores().red }}</p>
+        <span class="team-result-label">
+          {{ game.winner() === 'red' ? 'Winner' : game.winner() === 'draw' ? 'Joint result' : 'Runner-up' }}
+        </span>
+      </section>
+
+      <div class="score-divider" aria-hidden="true">–</div>
+
+      <section class="team-score blue-score" [class.is-winner]="game.winner() === 'blue'" aria-labelledby="blue-score-heading">
+        <h3 id="blue-score-heading"><span aria-hidden="true">■</span> Blue team</h3>
+        <p class="score" [attr.aria-label]="game.scores().blue + ' points'">{{ game.scores().blue }}</p>
+        <span class="team-result-label">
+          {{ game.winner() === 'blue' ? 'Winner' : game.winner() === 'draw' ? 'Joint result' : 'Runner-up' }}
+        </span>
+      </section>
+    </div>
+  </section>
+
+  <section class="recap-card" aria-labelledby="round-recap-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Round by round</p>
+        <h2 id="round-recap-heading">Completed deck</h2>
+      </div>
+      <p>Points earned from configured winning cells.</p>
+    </div>
+
+    <ol class="round-recap">
+      @for (round of game.completedRounds(); track round.imageId; let roundIndex = $index) {
+        <li>
+          <span class="round-number" aria-hidden="true">{{ roundIndex + 1 }}</span>
+          <span class="round-image" [title]="round.imageName">{{ round.imageName }}</span>
+          <span class="round-points red-points"><span aria-hidden="true">▲</span> Red +{{ round.red.points }}</span>
+          <span class="round-points blue-points"><span aria-hidden="true">■</span> Blue +{{ round.blue.points }}</span>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="replay-card" aria-labelledby="replay-heading">
+    <div>
+      <p class="eyebrow">Keep the deck</p>
+      <h2 id="replay-heading">Ready for another game?</h2>
+      <p>
+        Return to setup to review the same {{ game.deck().length }}
+        {{ game.deck().length === 1 ? 'image' : 'images' }} and winning cells. Scores,
+        guesses, locks, and this round history will be cleared.
+      </p>
+    </div>
+
+    <button type="button" class="replay-action" (click)="returnToSetup()">
+      <span>Return to setup</span>
+      <span aria-hidden="true">↺</span>
+    </button>
+  </section>
+</article>

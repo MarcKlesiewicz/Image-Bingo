@@ -52,11 +52,11 @@
 }
 
 .red-score .team-symbol {
-  color: #ff8d9c;
+  color: var(--color-team-red);
 }
 
 .blue-score .team-symbol {
-  color: #82caff;
+  color: var(--color-team-blue);
 }
 
 .team-copy {

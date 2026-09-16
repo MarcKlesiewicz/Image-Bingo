@@ -9,6 +9,8 @@ import {
 } from '@angular/core';
 import { Grid, GridCell, GridRow } from '@angular/aria/grid';
 
+import { CELL_COUNT, GRID_SIZE } from '../../models/game.models';
+
 export type ImageGridMode = 'configure' | 'covered' | 'revealed';
 export type ImageGridOwnership = 'none' | 'red' | 'blue' | 'shared';
 export type ImageGridRevealOutcome =
@@ -26,8 +28,6 @@ export interface ImageGridCellView {
   readonly accessibleLabel: string;
 }
 
-const GRID_SIZE = 10;
-const CELL_COUNT = GRID_SIZE * GRID_SIZE;
 const MINIMUM_CELL_SIZE = 40;
 
 @Component({

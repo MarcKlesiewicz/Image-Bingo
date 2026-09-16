@@ -12,9 +12,16 @@ export type PlayPhase = Exclude<GamePhase, 'setup' | 'finished'>;
 export type GameRoute = 'setup' | 'play' | 'results';
 export type CellNumber = number;
 
+export const GRID_SIZE = 10;
+export const CELL_COUNT = GRID_SIZE * GRID_SIZE;
+export const CELL_NUMBERS = Array.from(
+  { length: CELL_COUNT },
+  (_, index) => index + 1,
+) as readonly CellNumber[];
+export const MAX_GUESSES = 2;
+
 export interface DeckImage {
   readonly id: string;
-  readonly file: File;
   readonly name: string;
   readonly type: string;
   readonly size: number;
@@ -43,7 +50,6 @@ export interface RoundSelection {
 }
 
 export interface CompletedTeamRound {
-  readonly selections: readonly CellNumber[];
   readonly hits: readonly CellNumber[];
   readonly misses: readonly CellNumber[];
   readonly points: number;
@@ -52,8 +58,6 @@ export interface CompletedTeamRound {
 export interface CompletedRound {
   readonly imageId: string;
   readonly imageName: string;
-  readonly imageIndex: number;
-  readonly starter: Team;
   readonly correctCells: readonly CellNumber[];
   readonly correctUnselected: readonly CellNumber[];
   readonly red: CompletedTeamRound;
@@ -112,13 +116,3 @@ export interface FinishedGameState extends SharedGameState {
 }
 
 export type GameState = SetupGameState | ActiveGameState | FinishedGameState;
-
-export interface RevealData {
-  readonly imageId: string;
-  readonly correctCells: readonly CellNumber[];
-  readonly correctUnselected: readonly CellNumber[];
-  readonly redHits: readonly CellNumber[];
-  readonly redMisses: readonly CellNumber[];
-  readonly blueHits: readonly CellNumber[];
-  readonly blueMisses: readonly CellNumber[];
-}

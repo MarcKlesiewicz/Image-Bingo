@@ -1,26 +1,34 @@
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
 <header class="app-header">
-  <a class="brand" routerLink="/setup" aria-label="Image Bingo home">
+  <a class="brand" [routerLink]="game.authoritativeRoute()" aria-label="Image Bingo, current game stage">
     <span aria-hidden="true">◎</span>
     <span>Image Bingo</span>
   </a>
 
-  <nav aria-label="Game stages">
-    <ul>
-      @for (item of navigation; track item.path) {
-        <li>
-          <a
-            [routerLink]="item.path"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-            [attr.aria-label]="'Go to ' + item.label"
-          >
-            {{ item.label }}
-          </a>
+  <nav aria-label="Game progress">
+    <ol>
+      @for (item of navigation; track item.route; let stageIndex = $index) {
+        <li [class.is-current]="isCurrent(item)" [class.is-complete]="isComplete(stageIndex)">
+          <span class="stage-number" aria-hidden="true">
+            {{ isComplete(stageIndex) ? '✓' : stageIndex + 1 }}
+          </span>
+          @if (isCurrent(item)) {
+            <a [routerLink]="'/' + item.route" aria-current="step">
+              {{ item.label }}
+              <span class="visually-hidden">, current stage</span>
+            </a>
+          } @else {
+            <span class="stage-label">
+              {{ item.label }}
+              <span class="visually-hidden">
+                {{ isComplete(stageIndex) ? ', completed stage' : ', upcoming stage' }}
+              </span>
+            </span>
+          }
         </li>
       }
-    </ul>
+    </ol>
   </nav>
 </header>
 
@@ -29,5 +37,5 @@
 </main>
 
 <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
-  Image Bingo is ready.
+  {{ shellAnnouncement() }}
 </p>

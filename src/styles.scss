@@ -13,6 +13,8 @@
   --color-positive: #7ce6a2;
   --color-danger: #ff7f8f;
   --color-focus: #ffec70;
+  --color-team-red: #ff8d9c;
+  --color-team-blue: #82caff;
 
   --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -49,7 +51,11 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--color-canvas);
+  background:
+    radial-gradient(circle at 15% -10%, rgb(25 70 116 / 32%), transparent 34rem),
+    radial-gradient(circle at 92% 8%, rgb(103 232 249 / 10%), transparent 30rem),
+    var(--color-canvas);
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 1rem;
@@ -67,6 +73,11 @@ textarea {
 button,
 a {
   touch-action: manipulation;
+}
+
+button:not(:disabled),
+a[href] {
+  cursor: pointer;
 }
 
 :focus-visible {
@@ -91,31 +102,17 @@ a {
   border: 0 !important;
 }
 
-.placeholder-page {
-  display: grid;
-  gap: var(--space-4);
-  max-width: 52rem;
-  padding: clamp(var(--space-6), 4vw, var(--space-12));
-  margin: 0 auto;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-raised);
-}
+@media (forced-colors: active) {
+  :root {
+    color-scheme: light dark;
+  }
 
-.placeholder-page h1 {
-  margin: 0;
-  color: var(--color-primary);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 4rem);
-  line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
+  body {
+    background: Canvas;
+    color: CanvasText;
+  }
 
-.placeholder-page p {
-  max-width: 60ch;
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: clamp(1.125rem, 2vw, 1.4rem);
+  :focus-visible {
+    outline-color: Highlight;
+  }
 }

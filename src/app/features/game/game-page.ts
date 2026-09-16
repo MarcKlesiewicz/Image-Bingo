@@ -10,7 +10,13 @@ import {
 import { Router } from '@angular/router';
 
 import { GameStateService } from '../../core/game-state.service';
-import { CellNumber, Team } from '../../models/game.models';
+import {
+  CELL_NUMBERS,
+  CellNumber,
+  GamePhase,
+  MAX_GUESSES,
+  Team,
+} from '../../models/game.models';
 import {
   ImageGrid,
   ImageGridCellView,
@@ -19,8 +25,27 @@ import {
 } from '../../shared/image-grid/image-grid';
 import { Scoreboard } from '../../shared/scoreboard/scoreboard';
 
-const CELL_NUMBERS = Array.from({ length: 100 }, (_, index) => index + 1);
-const MAX_GUESSES = 2;
+const OWNERSHIP_LABELS: Record<ImageGridOwnership, string> = {
+  none: 'No team selected this cell',
+  red: 'Selected by Red only',
+  blue: 'Selected by Blue only',
+  shared: 'Selected by both Red and Blue',
+};
+
+const RESULT_LABELS: Record<Exclude<ImageGridRevealOutcome, null>, string> = {
+  hit: 'Hit. This guessed cell is correct and its image area is revealed',
+  miss: 'Miss. This guessed cell is not correct and its image area is revealed',
+  'correct-unselected': 'Correct cell, but neither team guessed it. The image remains covered',
+};
+
+interface CellDescriptionContext {
+  readonly ownership: ImageGridOwnership;
+  readonly activeTeam: Team | null;
+  readonly selectedByActive: boolean;
+  readonly disabled: boolean;
+  readonly revealOutcome: ImageGridRevealOutcome;
+  readonly phase: GamePhase;
+}
 
 @Component({
   selector: 'app-game-page',
@@ -43,6 +68,9 @@ export class GamePage {
   private readonly announcement = signal('');
 
   protected readonly liveAnnouncement = this.announcement.asReadonly();
+  private readonly correctCells = computed(
+    () => new Set(this.game.currentGameImage()?.correctCells ?? []),
+  );
   protected readonly roundNumber = computed(
     () => (this.game.currentImageIndex() ?? 0) + 1,
   );
@@ -67,11 +95,11 @@ export class GamePage {
   protected readonly turnGuidance = computed(() => {
     const team = this.game.activeTeam();
     if (team !== null) {
-      const count = this.game.activeSelections().length;
-      if (count === MAX_GUESSES) {
+      const remaining = this.game.remainingGuesses();
+      if (remaining === 0) {
         return `${this.teamLabel(team)} has two guesses. Deselect a chosen cell to replace it, or lock the turn.`;
       }
-      return `Select ${MAX_GUESSES - count} more ${MAX_GUESSES - count === 1 ? 'cell' : 'cells'} for ${this.teamLabel(team)}. Guesses stay editable until Lock guesses.`;
+      return `Select ${remaining} more ${remaining === 1 ? 'cell' : 'cells'} for ${this.teamLabel(team)}. Guesses stay editable until Lock guesses.`;
     }
     if (this.game.phase() === 'ready-to-reveal') {
       return 'The board is frozen. Reveal records this round once and shows only the guessed areas.';
@@ -83,17 +111,16 @@ export class GamePage {
     const blue = new Set(this.game.blueSelections());
     const activeTeam = this.game.activeTeam();
     const activeSelections = new Set(this.game.activeSelections());
-    const activeAtLimit = activeSelections.size >= MAX_GUESSES;
+    const activeAtLimit = this.game.remainingGuesses() === 0;
     const phase = this.game.phase();
-    const correct = new Set(this.game.currentGameImage()?.correctCells ?? []);
+    const correct = this.correctCells();
+    const acceptingGuesses = phase === 'guessing-first' || phase === 'guessing-second';
 
     return CELL_NUMBERS.map((number) => {
       const redSelected = red.has(number);
       const blueSelected = blue.has(number);
       const ownership = this.ownership(redSelected, blueSelected);
       const selectedByActive = activeSelections.has(number);
-      const acceptingGuesses =
-        phase === 'guessing-first' || phase === 'guessing-second';
       const disabled =
         !acceptingGuesses ||
         activeTeam === null ||
@@ -109,14 +136,14 @@ export class GamePage {
         selected: selectedByActive,
         revealOutcome,
         disabled,
-        accessibleLabel: this.cellDescription(
+        accessibleLabel: this.cellDescription({
           ownership,
           activeTeam,
           selectedByActive,
           disabled,
           revealOutcome,
           phase,
-        ),
+        }),
       };
     });
   });
@@ -139,8 +166,9 @@ export class GamePage {
     }
 
     if (wasSelected) {
+      const remaining = this.game.remainingGuesses();
       this.announcement.set(
-        `${this.teamLabel(team)} removed cell ${cell}. ${MAX_GUESSES - after} ${MAX_GUESSES - after === 1 ? 'guess remains' : 'guesses remain'}.`,
+        `${this.teamLabel(team)} removed cell ${cell}. ${remaining} ${remaining === 1 ? 'guess remains' : 'guesses remain'}.`,
       );
       return;
     }
@@ -256,49 +284,37 @@ export class GamePage {
     return correct ? 'correct-unselected' : null;
   }
 
-  private cellDescription(
-    ownership: ImageGridOwnership,
-    activeTeam: Team | null,
-    selectedByActive: boolean,
-    disabled: boolean,
-    revealOutcome: ImageGridRevealOutcome,
-    phase: string,
-  ): string {
-    const ownershipLabel: Record<ImageGridOwnership, string> = {
-      none: 'No team selected this cell',
-      red: 'Selected by Red only',
-      blue: 'Selected by Blue only',
-      shared: 'Selected by both Red and Blue',
-    };
-
+  private cellDescription({
+    ownership,
+    activeTeam,
+    selectedByActive,
+    disabled,
+    revealOutcome,
+    phase,
+  }: CellDescriptionContext): string {
     if (phase === 'revealed') {
-      const resultLabel: Record<Exclude<ImageGridRevealOutcome, null>, string> = {
-        hit: 'Hit. This guessed cell is correct and its image area is revealed',
-        miss: 'Miss. This guessed cell is not correct and its image area is revealed',
-        'correct-unselected': 'Correct cell, but neither team guessed it. The image remains covered',
-      };
-      return `${ownershipLabel[ownership]}. ${
+      return `${OWNERSHIP_LABELS[ownership]}. ${
         revealOutcome === null
           ? 'Not guessed and not configured as correct. The image remains covered'
-          : resultLabel[revealOutcome]
+          : RESULT_LABELS[revealOutcome]
       }`;
     }
 
     if (activeTeam === null) {
-      return `${ownershipLabel[ownership]}. Both teams are locked. Selection is unavailable until reveal`;
+      return `${OWNERSHIP_LABELS[ownership]}. Both teams are locked. Selection is unavailable until reveal`;
     }
 
     const team = this.teamLabel(activeTeam);
     if (selectedByActive) {
-      return `${ownershipLabel[ownership]}. ${team} selected this cell. Available to deselect before locking`;
+      return `${OWNERSHIP_LABELS[ownership]}. ${team} selected this cell. Available to deselect before locking`;
     }
     if (disabled) {
-      return `${ownershipLabel[ownership]}. ${team} has not selected this cell. Unavailable because ${team} already has two guesses; deselect one to replace it`;
+      return `${OWNERSHIP_LABELS[ownership]}. ${team} has not selected this cell. Unavailable because ${team} already has two guesses; deselect one to replace it`;
     }
     if (ownership !== 'none') {
-      return `${ownershipLabel[ownership]}. ${team} has not selected this cell. Available to select as a shared guess`;
+      return `${OWNERSHIP_LABELS[ownership]}. ${team} has not selected this cell. Available to select as a shared guess`;
     }
-    return `${ownershipLabel[ownership]}. ${team} has not selected this cell. Available to select`;
+    return `${OWNERSHIP_LABELS[ownership]}. ${team} has not selected this cell. Available to select`;
   }
 
   private scheduleFocus(action: () => void): void {

@@ -10,14 +10,13 @@ import {
   GameState,
   ImageImportError,
   ImageImportSummary,
-  RevealData,
+  MAX_GUESSES,
   RoundSelection,
   Score,
   Team,
   Winner,
 } from '../models/game.models';
 
-const MAX_GUESSES = 2;
 const FIRST_CELL = 1;
 const LAST_CELL = 100;
 
@@ -41,7 +40,7 @@ export class GameStateService implements OnDestroy {
   private imageSequence = 0;
   private destroyed = false;
 
-  readonly state = this.writableState.asReadonly();
+  private readonly state = this.writableState.asReadonly();
   readonly phase = computed(() => this.state().phase);
   readonly deck = computed(() => this.state().deck);
   readonly importPending = computed(() => this.state().importPending);
@@ -54,10 +53,8 @@ export class GameStateService implements OnDestroy {
       ? null
       : (state.deck[state.configurationIndex] ?? null);
   });
-  readonly currentConfigurationIndex = this.configurationIndex;
-  readonly currentConfigurationImage = this.configurationImage;
   readonly incompleteImages = computed(() =>
-    this.state().deck.filter((image) => image.correctCells.length === 0),
+    this.deck().filter((image) => image.correctCells.length === 0),
   );
   readonly canStart = computed(() => {
     const state = this.state();
@@ -65,7 +62,7 @@ export class GameStateService implements OnDestroy {
       state.phase === 'setup' &&
       !state.importPending &&
       state.deck.length > 0 &&
-      state.deck.every((image) => image.correctCells.length > 0)
+      this.incompleteImages().length === 0
     );
   });
 
@@ -76,7 +73,6 @@ export class GameStateService implements OnDestroy {
       ? null
       : (state.deck[state.currentImageIndex] ?? null);
   });
-  readonly currentImage = this.currentGameImage;
   readonly starter = computed<Team | null>(() => {
     const state = this.state();
     return state.round?.starter ?? null;
@@ -102,12 +98,6 @@ export class GameStateService implements OnDestroy {
     }
     return team === 'red' ? this.redSelections() : this.blueSelections();
   });
-  readonly redRemainingGuesses = computed(
-    () => MAX_GUESSES - this.redSelections().length,
-  );
-  readonly blueRemainingGuesses = computed(
-    () => MAX_GUESSES - this.blueSelections().length,
-  );
   readonly remainingGuesses = computed(() => MAX_GUESSES - this.activeSelections().length);
   readonly canLock = computed(() => {
     const state = this.state();
@@ -132,22 +122,7 @@ export class GameStateService implements OnDestroy {
     const image = this.currentGameImage();
     return image === null
       ? null
-      : (this.state().completedRounds.find((round) => round.imageId === image.id) ?? null);
-  });
-  readonly currentReveal = computed<RevealData | null>(() => {
-    const round = this.currentCompletedRound();
-    if (round === null) {
-      return null;
-    }
-    return {
-      imageId: round.imageId,
-      correctCells: round.correctCells,
-      correctUnselected: round.correctUnselected,
-      redHits: round.red.hits,
-      redMisses: round.red.misses,
-      blueHits: round.blue.hits,
-      blueMisses: round.blue.misses,
-    };
+        : (this.completedRounds().find((round) => round.imageId === image.id) ?? null);
   });
   readonly isLastRound = computed(() => {
     const state = this.state();
@@ -170,7 +145,7 @@ export class GameStateService implements OnDestroy {
     return state.phase === 'revealed' && this.isLastRound() && this.currentCompletedRound() !== null;
   });
   readonly scores = computed<Score>(() =>
-    this.state().completedRounds.reduce(
+    this.completedRounds().reduce(
       (score, round) => ({
         red: score.red + round.red.points,
         blue: score.blue + round.blue.points,
@@ -245,7 +220,6 @@ export class GameStateService implements OnDestroy {
         const current = this.state();
         const image: DeckImage = {
           id: `image-${++this.imageSequence}`,
-          file,
           name: file.name,
           type: file.type,
           size: file.size,
@@ -438,7 +412,7 @@ export class GameStateService implements OnDestroy {
     if (image === undefined) {
       return;
     }
-    const completedRound = completeRound(image, state.currentImageIndex, state.round);
+    const completedRound = completeRound(image, state.round);
     this.writableState.set({
       ...state,
       phase: 'revealed',
@@ -474,10 +448,6 @@ export class GameStateService implements OnDestroy {
       phase: 'finished',
       round: null,
     });
-  }
-
-  viewResults(): void {
-    this.finishGame();
   }
 
   returnToSetup(): void {
@@ -564,7 +534,6 @@ function createRound(imageId: string, imageIndex: number): RoundSelection {
 
 function completeRound(
   image: DeckImage,
-  imageIndex: number,
   round: RoundSelection,
 ): CompletedRound {
   const correct = new Set(image.correctCells);
@@ -574,8 +543,6 @@ function completeRound(
   return {
     imageId: image.id,
     imageName: image.name,
-    imageIndex,
-    starter: round.starter,
     correctCells: [...image.correctCells],
     correctUnselected: image.correctCells.filter((cell) => !selected.has(cell)),
     red,
@@ -589,7 +556,6 @@ function completeTeamRound(
 ): CompletedTeamRound {
   const hits = selections.filter((cell) => correct.has(cell));
   return {
-    selections: [...selections],
     hits,
     misses: selections.filter((cell) => !correct.has(cell)),
     points: hits.length,

@@ -2,8 +2,8 @@ import { Routes } from '@angular/router';
 
 import { gameFlowGuard } from './core/game-flow.guard';
 import { GamePage } from './features/game/game-page';
+import { ResultsPage } from './features/results/results-page';
 import { SetupPage } from './features/setup/setup-page';
-import { ResultsPage } from './pages/results-page';
 
 export const routes: Routes = [
   {
