@@ -1,0 +1,33 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header class="app-header">
+  <a class="brand" routerLink="/setup" aria-label="Image Bingo home">
+    <span aria-hidden="true">◎</span>
+    <span>Image Bingo</span>
+  </a>
+
+  <nav aria-label="Game stages">
+    <ul>
+      @for (item of navigation; track item.path) {
+        <li>
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            [attr.aria-label]="'Go to ' + item.label"
+          >
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+</header>
+
+<main id="main-content" tabindex="-1">
+  <router-outlet />
+</main>
+
+<p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
+  Image Bingo is ready.
+</p>
