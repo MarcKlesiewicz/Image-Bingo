@@ -54,7 +54,7 @@
               [class.is-correct-unselected]="
                 mode() === 'revealed' && cell.revealOutcome === 'correct-unselected'
               "
-              (click)="activate(cell)"
+              (selectedChange)="activate(cell)"
             >
               <span class="cell-number" aria-hidden="true">{{ cell.number }}</span>
 
