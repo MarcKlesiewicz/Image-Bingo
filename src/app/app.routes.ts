@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 
 import { gameFlowGuard } from './core/game-flow.guard';
+import { GamePage } from './features/game/game-page';
 import { SetupPage } from './features/setup/setup-page';
-import { PlayPage } from './pages/play-page';
 import { ResultsPage } from './pages/results-page';
 
 export const routes: Routes = [
@@ -14,7 +14,7 @@ export const routes: Routes = [
   },
   {
     path: 'play',
-    component: PlayPage,
+    component: GamePage,
     canActivate: [gameFlowGuard],
     title: 'Play | Image Bingo',
   },
