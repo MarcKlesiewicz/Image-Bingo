@@ -1,0 +1,240 @@
+<article class="setup-page" aria-labelledby="setup-heading">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Host controls · Build the deck</p>
+      <h1 id="setup-heading">Set up image bingo</h1>
+      <p class="hero-copy">
+        Add local images, mark every winning area, then hand the finished deck to round one.
+        Nothing leaves this browser session.
+      </p>
+    </div>
+
+    <div class="deck-meter" aria-label="Deck progress">
+      <strong>{{ deckCount() }}</strong>
+      <span>{{ deckCount() === 1 ? 'image in deck' : 'images in deck' }}</span>
+      <span>{{ game.incompleteImages().length }} still incomplete</span>
+    </div>
+  </header>
+
+  <section
+    class="import-panel panel"
+    aria-labelledby="import-heading"
+    [attr.aria-busy]="game.importPending()"
+  >
+    <div class="section-heading">
+      <div>
+        <p class="step-label">Step 1</p>
+        <h2 id="import-heading">Add image files</h2>
+      </div>
+      <p>Choose one or many files. New batches are appended in selection order.</p>
+    </div>
+
+    <label class="file-picker" [class.is-disabled]="game.importPending()">
+      <span class="file-picker-title">
+        {{ game.importPending() ? 'Checking images…' : 'Choose images' }}
+      </span>
+      <span>PNG, JPEG, GIF, WebP, or another browser-supported image format</span>
+      <input
+        #fileInput
+        type="file"
+        accept="image/*"
+        multiple
+        [disabled]="game.importPending()"
+        (change)="importFiles($event)"
+      />
+    </label>
+
+    <p class="live-status" role="status" aria-live="polite" aria-atomic="true">
+      {{ importStatus() }}
+    </p>
+
+    @if (game.importErrors().length > 0) {
+      <div class="import-errors" aria-labelledby="rejected-heading">
+        <h3 id="rejected-heading">Files not added</h3>
+        <ul>
+          @for (error of game.importErrors(); track $index) {
+            <li>
+              <strong>{{ error.fileName }}</strong>
+              <span>{{ error.message }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+
+  <div class="setup-workspace">
+    <aside class="deck-panel panel" aria-labelledby="deck-heading">
+      <div class="section-heading compact">
+        <div>
+          <p class="step-label">Step 2</p>
+          <h2 id="deck-heading">Review the deck</h2>
+        </div>
+        @if (hasDeck()) {
+          <button
+            type="button"
+            class="text-button danger-button"
+            [disabled]="game.importPending()"
+            (click)="clearDeck()"
+          >
+            Clear deck
+          </button>
+        }
+      </div>
+
+      @if (hasDeck()) {
+        <ol class="deck-list">
+          @for (image of game.deck(); track image.id; let index = $index) {
+            <li [class.is-active]="activeIndex() === index">
+              <div class="round-number" aria-hidden="true">{{ index + 1 }}</div>
+              <div class="deck-item-copy">
+                <span class="filename" [title]="image.name">{{ image.name }}</span>
+                <span class="item-meta">
+                  Round {{ index + 1 }} · {{ correctCellLabel(image.correctCells.length) }}
+                </span>
+                @if (activeIndex() === index) {
+                  <span class="active-indicator">Currently configuring</span>
+                } @else if (image.correctCells.length === 0) {
+                  <span class="incomplete-indicator">Needs a correct cell</span>
+                }
+              </div>
+              <div class="deck-item-actions">
+                <button
+                  type="button"
+                  class="secondary-button small-button"
+                  [attr.aria-current]="activeIndex() === index ? 'true' : null"
+                  (click)="selectImage(index, true)"
+                >
+                  {{ activeIndex() === index ? 'Selected' : 'Configure' }}
+                </button>
+                <button
+                  type="button"
+                  class="icon-button"
+                  [disabled]="game.importPending()"
+                  [attr.aria-label]="'Remove ' + image.name + ' from the deck'"
+                  (click)="removeImage(image.id, image.name)"
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+            </li>
+          }
+        </ol>
+      } @else {
+        <div class="empty-state">
+          <span aria-hidden="true">▧</span>
+          <h3>Your deck is empty</h3>
+          <p>Use the image picker above. The first accepted image opens here automatically.</p>
+        </div>
+      }
+    </aside>
+
+    <section class="configuration-panel panel" aria-labelledby="configuration-heading">
+      <div class="section-heading configuration-heading">
+        <div>
+          <p class="step-label">Step 3</p>
+          <h2 id="configuration-heading" #configurationHeading tabindex="-1">
+            Mark correct cells
+          </h2>
+        </div>
+        @if (game.configurationImage(); as image) {
+          <div class="position-badge">
+            <span>{{ currentPosition() }}</span>
+            <strong>{{ correctCellLabel(image.correctCells.length) }}</strong>
+          </div>
+        }
+      </div>
+
+      @if (game.configurationImage(); as image) {
+        <div class="board-intro">
+          <div>
+            <h3 [title]="image.name">{{ image.name }}</h3>
+            <p>Select every cell that should score. Changes are saved immediately.</p>
+          </div>
+          <nav class="image-navigation" aria-label="Configuration image navigation">
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="!hasPrevious()"
+              (click)="moveConfiguration(-1)"
+            >
+              <span aria-hidden="true">←</span> Previous
+            </button>
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="!hasNext()"
+              (click)="moveConfiguration(1)"
+            >
+              Next <span aria-hidden="true">→</span>
+            </button>
+          </nav>
+        </div>
+
+        <app-image-grid
+          [url]="image.url"
+          [alt]="image.name"
+          [intrinsicWidth]="image.width"
+          [intrinsicHeight]="image.height"
+          mode="configure"
+          [cells]="configurationCells()"
+          (cellActivated)="toggleCorrectCell($event)"
+        />
+      } @else {
+        <div class="empty-state board-empty">
+          <span aria-hidden="true">100</span>
+          <h3>No image to configure</h3>
+          <p>Add an image, then choose one or more of its numbered cells as correct.</p>
+        </div>
+      }
+    </section>
+  </div>
+
+  <section class="readiness-panel panel" aria-labelledby="readiness-heading">
+    <div class="section-heading compact">
+      <div>
+        <p class="step-label">Step 4</p>
+        <h2 id="readiness-heading">Ready for round one?</h2>
+      </div>
+      <span class="readiness-state" [class.is-ready]="game.canStart()">
+        {{ game.canStart() ? 'Deck ready' : 'Setup incomplete' }}
+      </span>
+    </div>
+
+    <p id="start-guidance">{{ startGuidance() }}</p>
+
+    @if (game.incompleteImages().length > 0) {
+      <div class="incomplete-summary" aria-labelledby="incomplete-heading">
+        <h3 id="incomplete-heading">Images that need a correct cell</h3>
+        <ul>
+          @for (image of game.incompleteImages(); track image.id) {
+            <li>
+              <button
+                #incompleteButton
+                type="button"
+                class="incomplete-link"
+                (click)="selectImage(game.deck().indexOf(image), true)"
+              >
+                <span>{{ image.name }}</span>
+                <span aria-hidden="true">Configure →</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    <button
+      type="button"
+      class="start-button"
+      [class.is-aria-disabled]="!game.canStart()"
+      [attr.aria-disabled]="!game.canStart()"
+      aria-describedby="start-guidance"
+      [disabled]="game.importPending()"
+      (click)="startGame()"
+    >
+      <span>Start game</span>
+      <span aria-hidden="true">Round 1 →</span>
+    </button>
+  </section>
+</article>
