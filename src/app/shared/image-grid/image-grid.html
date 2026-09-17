@@ -25,7 +25,8 @@
     [class.is-covered]="mode() === 'covered'"
     [class.is-revealed]="mode() === 'revealed'"
     [style.aspect-ratio]="aspectRatio()"
-    [style.min-width.px]="minimumBoardWidth()"
+    [style.min-width.px]="mode() === 'configure' ? minimumBoardWidth() : null"
+    [style.--image-aspect]="numericAspectRatio()"
   >
     <img
       class="board-image"
@@ -75,13 +76,6 @@
                 [class.is-red]="cell.ownership === 'red'"
                 [class.is-blue]="cell.ownership === 'blue'"
                 [class.is-shared]="cell.ownership === 'shared'"
-                [class.is-revealed-guess]="
-                  mode() === 'revealed' &&
-                  (cell.revealOutcome === 'hit' || cell.revealOutcome === 'miss')
-                "
-                [class.is-correct-unselected]="
-                  mode() === 'revealed' && cell.revealOutcome === 'correct-unselected'
-                "
                 (selectedChange)="activate(cell)"
               >
                 <span class="cell-number" aria-hidden="true">{{ cell.number }}</span>

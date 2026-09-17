@@ -1,6 +1,6 @@
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<header class="app-header">
+<header class="app-header" [class.is-play-stage]="game.routePhase() === 'play'">
   <a class="brand" [routerLink]="game.authoritativeRoute()" aria-label="Image Bingo, current game stage">
     <span aria-hidden="true">◎</span>
     <span>Image Bingo</span>
@@ -32,7 +32,11 @@
   </nav>
 </header>
 
-<main id="main-content" tabindex="-1">
+<main
+  id="main-content"
+  [class.is-play-stage]="game.routePhase() === 'play'"
+  tabindex="-1"
+>
   <router-outlet />
 </main>
 

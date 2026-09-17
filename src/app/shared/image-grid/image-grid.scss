@@ -27,6 +27,16 @@
   isolation: isolate;
 }
 
+.image-board.is-covered,
+.image-board.is-revealed {
+  width: min(
+    100%,
+    calc(var(--game-board-max-height, 100dvh) * var(--image-aspect))
+  );
+  min-width: 0;
+  margin-inline: auto;
+}
+
 .board-image {
   position: absolute;
   inset: 0;
@@ -89,8 +99,7 @@
   border-bottom: 0;
 }
 
-.is-covered .cell,
-.is-revealed .cell {
+.is-covered .cell {
   background: #26354d;
 }
 
@@ -117,14 +126,10 @@
   box-shadow: inset 0 0 0 3px #ffd66b;
 }
 
-.is-revealed .cell.is-revealed-guess {
-  background: rgba(8, 12, 18, 0.2);
+.is-revealed .cell {
+  background: transparent;
+  box-shadow: none;
   text-shadow: 0 1px 3px #000, 0 0 2px #000;
-}
-
-.is-revealed .cell.is-correct-unselected {
-  background: #66531a;
-  box-shadow: inset 0 0 0 3px #ffe07a;
 }
 
 .cell[aria-disabled='true'] {
@@ -286,8 +291,7 @@
     forced-color-adjust: none;
   }
 
-  .is-covered .cell,
-  .is-revealed .cell {
+  .is-covered .cell {
     background: Canvas;
     color: CanvasText;
   }
@@ -295,10 +299,14 @@
   .cell.is-red,
   .cell.is-blue,
   .cell.is-shared,
-  .cell.is-configured,
-  .is-revealed .cell.is-correct-unselected {
+  .cell.is-configured {
     background: Highlight;
     color: HighlightText;
+  }
+
+  .is-revealed .cell {
+    background: transparent;
+    color: CanvasText;
   }
 
   .cell:focus-visible {

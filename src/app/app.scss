@@ -117,6 +117,31 @@ main {
   margin-inline: auto;
 }
 
+.app-header.is-play-stage {
+  width: min(calc(100% - 1rem), 96rem);
+  padding-block: 0.45rem;
+}
+
+.app-header.is-play-stage .brand {
+  min-height: 2.5rem;
+  font-size: 1.2rem;
+}
+
+.app-header.is-play-stage nav li {
+  min-height: 2.35rem;
+}
+
+.app-header.is-play-stage nav a,
+.app-header.is-play-stage .stage-label {
+  min-height: calc(2.35rem - 4px);
+  padding-block: 0.25rem;
+}
+
+main.is-play-stage {
+  width: min(calc(100% - 1rem), 96rem);
+  padding-block: 0 0.5rem;
+}
+
 @media (max-width: 48rem) {
   .app-header {
     align-items: stretch;

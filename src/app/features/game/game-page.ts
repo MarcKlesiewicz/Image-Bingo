@@ -33,9 +33,9 @@ const OWNERSHIP_LABELS: Record<ImageGridOwnership, string> = {
 };
 
 const RESULT_LABELS: Record<Exclude<ImageGridRevealOutcome, null>, string> = {
-  hit: 'Hit. This guessed cell is correct and its image area is revealed',
-  miss: 'Miss. This guessed cell is not correct and its image area is revealed',
-  'correct-unselected': 'Correct cell, but neither team guessed it. The image remains covered',
+  hit: 'Hit. This guessed cell is correct',
+  miss: 'Miss. This guessed cell is not correct',
+  'correct-unselected': 'Correct cell, but neither team guessed it',
 };
 
 interface CellDescriptionContext {
@@ -102,7 +102,7 @@ export class GamePage {
       return `Select ${remaining} more ${remaining === 1 ? 'cell' : 'cells'} for ${this.teamLabel(team)}. Guesses stay editable until Lock guesses.`;
     }
     if (this.game.phase() === 'ready-to-reveal') {
-      return 'The board is frozen. Reveal records this round once and shows only the guessed areas.';
+      return 'The board is frozen. Reveal scores the round and uncovers the whole image.';
     }
     return 'Review both teams’ hits and misses, then continue when the room is ready.';
   });
@@ -295,7 +295,7 @@ export class GamePage {
     if (phase === 'revealed') {
       return `${OWNERSHIP_LABELS[ownership]}. ${
         revealOutcome === null
-          ? 'Not guessed and not configured as correct. The image remains covered'
+          ? 'Not guessed and not configured as correct. The whole image is revealed'
           : RESULT_LABELS[revealOutcome]
       }`;
     }

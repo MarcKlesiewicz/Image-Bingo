@@ -130,6 +130,9 @@ export class ImageGrid {
   protected readonly aspectRatio = computed(
     () => `${this.safeWidth()} / ${this.safeHeight()}`,
   );
+  protected readonly numericAspectRatio = computed(
+    () => this.safeWidth() / this.safeHeight(),
+  );
   private readonly committedPlacement = computed(() =>
     normalizeGridPlacement(
       this.placement(),
@@ -159,7 +162,7 @@ export class ImageGrid {
       this.safeHeight(),
   );
   protected readonly minimumBoardWidth = computed(() => {
-    const ratio = this.safeWidth() / this.safeHeight();
+    const ratio = this.numericAspectRatio();
     return Math.ceil(
       (GRID_SIZE * MINIMUM_CELL_SIZE * Math.max(1, ratio)) /
         this.committedPlacement().size,
