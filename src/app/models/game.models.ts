@@ -19,6 +19,74 @@ export const CELL_NUMBERS = Array.from(
   (_, index) => index + 1,
 ) as readonly CellNumber[];
 export const MAX_GUESSES = 2;
+export const DEFAULT_GRID_PLACEMENT_SIZE = 0.46;
+export const MIN_GRID_PLACEMENT_SIZE = 0.3;
+export const MAX_GRID_PLACEMENT_SIZE = 0.9;
+
+export interface GridPlacement {
+  /** Horizontal position as a fraction of the image width. */
+  readonly x: number;
+  /** Vertical position as a fraction of the image height. */
+  readonly y: number;
+  /** Square side length as a fraction of the image's shorter side. */
+  readonly size: number;
+}
+
+export function createCenteredGridPlacement(
+  width: number,
+  height: number,
+): GridPlacement {
+  const safeWidth = safeImageDimension(width);
+  const safeHeight = safeImageDimension(height);
+  const shorterSide = Math.min(safeWidth, safeHeight);
+  const widthFraction =
+    (DEFAULT_GRID_PLACEMENT_SIZE * shorterSide) / safeWidth;
+  const heightFraction =
+    (DEFAULT_GRID_PLACEMENT_SIZE * shorterSide) / safeHeight;
+  return {
+    x: (1 - widthFraction) / 2,
+    y: (1 - heightFraction) / 2,
+    size: DEFAULT_GRID_PLACEMENT_SIZE,
+  };
+}
+
+export function normalizeGridPlacement(
+  placement: GridPlacement,
+  width: number,
+  height: number,
+  invalidSizeFallback = DEFAULT_GRID_PLACEMENT_SIZE,
+): GridPlacement {
+  const safeWidth = safeImageDimension(width);
+  const safeHeight = safeImageDimension(height);
+  const shorterSide = Math.min(safeWidth, safeHeight);
+  const size = clamp(
+    Number.isFinite(placement.size) ? placement.size : invalidSizeFallback,
+    MIN_GRID_PLACEMENT_SIZE,
+    MAX_GRID_PLACEMENT_SIZE,
+  );
+  const widthFraction = (size * shorterSide) / safeWidth;
+  const heightFraction = (size * shorterSide) / safeHeight;
+  return {
+    x: clamp(Number.isFinite(placement.x) ? placement.x : 0, 0, 1 - widthFraction),
+    y: clamp(Number.isFinite(placement.y) ? placement.y : 0, 0, 1 - heightFraction),
+    size,
+  };
+}
+
+export function safeImageDimension(value: number): number {
+  return Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+export function gridPlacementsEqual(
+  left: GridPlacement,
+  right: GridPlacement,
+): boolean {
+  return left.x === right.x && left.y === right.y && left.size === right.size;
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(Math.max(value, minimum), maximum);
+}
 
 export interface DeckImage {
   readonly id: string;
@@ -29,6 +97,7 @@ export interface DeckImage {
   readonly url: string;
   readonly width: number;
   readonly height: number;
+  readonly gridPlacement: GridPlacement;
   readonly correctCells: readonly CellNumber[];
 }
 

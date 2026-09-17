@@ -80,10 +80,12 @@
       </div>
 
       <app-image-grid
+        [imageId]="image.id"
         [url]="image.url"
         [alt]="image.name"
         [intrinsicWidth]="image.width"
         [intrinsicHeight]="image.height"
+        [placement]="image.gridPlacement"
         [mode]="game.phase() === 'revealed' ? 'revealed' : 'covered'"
         [cells]="gridCells()"
         (cellActivated)="toggleGuess($event)"

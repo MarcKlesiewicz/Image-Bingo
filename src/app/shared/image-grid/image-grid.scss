@@ -10,6 +10,15 @@
   padding: 0.25rem;
 }
 
+.placement-toolbar {
+  display: flex;
+  width: min(100%, 90rem);
+  box-sizing: border-box;
+  justify-content: center;
+  padding: 0.25rem 0.25rem 0.5rem;
+  background: #10151f;
+}
+
 .image-board {
   position: relative;
   width: min(100%, 90rem);
@@ -18,8 +27,7 @@
   isolation: isolate;
 }
 
-.board-image,
-.cell-grid {
+.board-image {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -31,9 +39,18 @@
   user-select: none;
 }
 
-.cell-grid {
+.grid-placement {
+  position: absolute;
   z-index: 1;
+  container-type: inline-size;
+}
+
+.cell-grid {
+  position: absolute;
+  inset: 0;
   display: grid;
+  width: 100%;
+  height: 100%;
   grid-template-rows: repeat(10, minmax(0, 1fr));
   gap: 0;
   box-sizing: border-box;
@@ -118,7 +135,7 @@
   position: absolute;
   top: 0.12rem;
   left: 0.18rem;
-  font-size: clamp(0.66rem, 1.25vw, 1.25rem);
+  font-size: clamp(0.42rem, 2.8cqi, 1.15rem);
   font-weight: 900;
   line-height: 1;
 }
@@ -128,13 +145,13 @@
   position: absolute;
   display: grid;
   place-items: center;
-  min-width: 1.15rem;
-  min-height: 1.15rem;
+  min-width: clamp(0.55rem, 4.8cqi, 1.15rem);
+  min-height: clamp(0.55rem, 4.8cqi, 1.15rem);
   padding: 0.06rem 0.16rem;
   border: 1px solid currentColor;
   background: #0b1018;
   color: #fff;
-  font-size: clamp(0.58rem, 1vw, 1rem);
+  font-size: clamp(0.4rem, 2.5cqi, 0.9rem);
   font-weight: 900;
   line-height: 1;
 }
@@ -168,6 +185,98 @@
   box-shadow: inset 0 0 0 2px #080b10;
 }
 
+.placement-controls {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+}
+
+.move-handle,
+.resize-handle {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border: 2px solid #080b10;
+  background: #ffdc68;
+  color: #111827;
+  font: inherit;
+  font-weight: 950;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.move-handle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: max-content;
+  min-width: 6.4rem;
+  padding: 0.32rem 0.58rem;
+  border-radius: 999px;
+  box-shadow: 0 0.18rem 0.65rem rgb(0 0 0 / 55%);
+  cursor: grab;
+}
+
+.move-handle:active {
+  cursor: grabbing;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 1.25rem;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  min-height: 1.25rem;
+  border-radius: 0.2rem;
+  box-shadow: 0 0.12rem 0.4rem rgb(0 0 0 / 65%);
+}
+
+.resize-handle::before,
+.resize-handle::after {
+  position: absolute;
+  width: 0.55rem;
+  height: 0.18rem;
+  background: currentColor;
+  content: '';
+}
+
+.resize-handle::after {
+  transform: rotate(90deg);
+}
+
+.resize-handle.north-west {
+  top: -0.55rem;
+  left: -0.55rem;
+  cursor: nwse-resize;
+}
+
+.resize-handle.north-east {
+  top: -0.55rem;
+  right: -0.55rem;
+  cursor: nesw-resize;
+}
+
+.resize-handle.south-west {
+  bottom: -0.55rem;
+  left: -0.55rem;
+  cursor: nesw-resize;
+}
+
+.resize-handle.south-east {
+  right: -0.55rem;
+  bottom: -0.55rem;
+  cursor: nwse-resize;
+}
+
+.move-handle:focus-visible,
+.resize-handle:focus-visible {
+  z-index: 2;
+  outline: 4px solid #67e8f9;
+  outline-offset: 3px;
+}
+
 @media (forced-colors: active) {
   .cell-grid,
   .cell,
@@ -195,5 +304,13 @@
   .cell:focus-visible {
     outline-color: Highlight;
     box-shadow: inset 0 0 0 2px Canvas;
+  }
+
+  .move-handle,
+  .resize-handle {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    forced-color-adjust: none;
   }
 }

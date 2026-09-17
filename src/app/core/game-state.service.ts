@@ -4,13 +4,17 @@ import {
   CellNumber,
   CompletedRound,
   CompletedTeamRound,
+  createCenteredGridPlacement,
   DeckImage,
   GamePhase,
   GameRoute,
   GameState,
+  GridPlacement,
+  gridPlacementsEqual,
   ImageImportError,
   ImageImportSummary,
   MAX_GUESSES,
+  normalizeGridPlacement,
   RoundSelection,
   Score,
   Team,
@@ -227,6 +231,10 @@ export class GameStateService implements OnDestroy {
           url,
           width: dimensions.width,
           height: dimensions.height,
+          gridPlacement: createCenteredGridPlacement(
+            dimensions.width,
+            dimensions.height,
+          ),
           correctCells: [],
         };
         this.writableState.set({
@@ -298,6 +306,35 @@ export class GameStateService implements OnDestroy {
     if (image !== null) {
       this.toggleCorrectCell(image.id, cell);
     }
+  }
+
+  updateCurrentGridPlacement(placement: GridPlacement): void {
+    const state = this.state();
+    const imageIndex = state.configurationIndex;
+    if (state.phase !== 'setup' || imageIndex === null) {
+      return;
+    }
+
+    const image = state.deck[imageIndex];
+    if (image === undefined) {
+      return;
+    }
+
+    const gridPlacement = normalizeGridPlacement(
+      placement,
+      image.width,
+      image.height,
+    );
+    if (gridPlacementsEqual(gridPlacement, image.gridPlacement)) {
+      return;
+    }
+
+    const deck = [...state.deck];
+    deck[imageIndex] = {
+      ...image,
+      gridPlacement,
+    };
+    this.writableState.set({ ...state, deck });
   }
 
   removeImage(imageId: string): void {

@@ -11,7 +11,11 @@ import {
 import { Router } from '@angular/router';
 
 import { GameStateService } from '../../core/game-state.service';
-import { CELL_NUMBERS, CellNumber } from '../../models/game.models';
+import {
+  CELL_NUMBERS,
+  CellNumber,
+  GridPlacement,
+} from '../../models/game.models';
 import {
   ImageGrid,
   ImageGridCellView,
@@ -127,6 +131,11 @@ export class SetupPage {
 
   protected toggleCorrectCell(cell: number): void {
     this.game.toggleCurrentCorrectCell(cell as CellNumber);
+    this.setupNotice.set('');
+  }
+
+  protected updateGridPlacement(placement: GridPlacement): void {
+    this.game.updateCurrentGridPlacement(placement);
     this.setupNotice.set('');
   }
 

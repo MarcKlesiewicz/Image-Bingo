@@ -149,7 +149,10 @@
         <div class="board-intro">
           <div>
             <h3 [title]="image.name">{{ image.name }}</h3>
-            <p>Select every cell that should score. Changes are saved immediately.</p>
+            <p>
+              Drag the Move grid control and resize from any corner, then select every
+              cell that should score. Changes are saved immediately.
+            </p>
           </div>
           <nav class="image-navigation" aria-label="Configuration image navigation">
             <button
@@ -172,13 +175,16 @@
         </div>
 
         <app-image-grid
+          [imageId]="image.id"
           [url]="image.url"
           [alt]="image.name"
           [intrinsicWidth]="image.width"
           [intrinsicHeight]="image.height"
+          [placement]="image.gridPlacement"
           mode="configure"
           [cells]="configurationCells()"
           (cellActivated)="toggleCorrectCell($event)"
+          (placementChanged)="updateGridPlacement($event)"
         />
       } @else {
         <div class="empty-state board-empty">

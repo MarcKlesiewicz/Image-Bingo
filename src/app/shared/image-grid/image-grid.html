@@ -1,5 +1,26 @@
 <div class="board-scroll" tabindex="-1">
+  @if (mode() === 'configure') {
+    <div
+      class="placement-toolbar"
+      [style.min-width.px]="minimumBoardWidth()"
+    >
+      <button
+        type="button"
+        class="move-handle"
+        aria-label="Move bingo grid. Use arrow keys to move; hold Shift for larger steps."
+        (pointerdown)="beginMove($event)"
+        (pointermove)="updatePointerInteraction($event)"
+        (pointerup)="finishPointerInteraction($event)"
+        (pointercancel)="cancelPointerInteraction($event)"
+        (keydown)="moveWithKeyboard($event)"
+      >
+        <span aria-hidden="true">✥</span> Move grid
+      </button>
+    </div>
+  }
+
   <div
+    #board
     class="image-board"
     [class.is-covered]="mode() === 'covered'"
     [class.is-revealed]="mode() === 'revealed'"
@@ -16,74 +37,102 @@
     />
 
     <div
-      #grid
-      class="cell-grid"
-      ngGrid
-      focusMode="roving"
-      rowWrap="nowrap"
-      colWrap="nowrap"
-      selectionMode="explicit"
-      [enableSelection]="mode() !== 'revealed'"
-      [multi]="true"
-      [softDisabled]="true"
-      [attr.aria-label]="'Image bingo board for ' + alt()"
-      aria-rowcount="10"
-      aria-colcount="10"
+      class="grid-placement"
+      [style.left.%]="placementLeft()"
+      [style.top.%]="placementTop()"
+      [style.width.%]="placementWidth()"
+      [style.height.%]="placementHeight()"
     >
-      @for (row of rows(); track $index; let rowIndex = $index) {
-        <div class="cell-row" ngGridRow [rowIndex]="rowIndex + 1">
-          @for (cell of row; track cell.number; let columnIndex = $index) {
-            <button
-              type="button"
-              class="cell"
-              ngGridCell
-              [rowIndex]="rowIndex + 1"
-              [colIndex]="columnIndex + 1"
-              [disabled]="cell.disabled"
-              [selectable]="mode() !== 'revealed'"
-              [selected]="isSelected(cell)"
-              [attr.aria-label]="cellLabel(cell)"
-              [class.is-configured]="mode() === 'configure' && cell.selected"
-              [class.is-red]="cell.ownership === 'red'"
-              [class.is-blue]="cell.ownership === 'blue'"
-              [class.is-shared]="cell.ownership === 'shared'"
-              [class.is-revealed-guess]="
-                mode() === 'revealed' &&
-                (cell.revealOutcome === 'hit' || cell.revealOutcome === 'miss')
-              "
-              [class.is-correct-unselected]="
-                mode() === 'revealed' && cell.revealOutcome === 'correct-unselected'
-              "
-              (selectedChange)="activate(cell)"
-            >
-              <span class="cell-number" aria-hidden="true">{{ cell.number }}</span>
+      <div
+        #grid
+        class="cell-grid"
+        ngGrid
+        focusMode="roving"
+        rowWrap="nowrap"
+        colWrap="nowrap"
+        selectionMode="explicit"
+        [enableSelection]="mode() !== 'revealed'"
+        [multi]="true"
+        [softDisabled]="true"
+        [attr.aria-label]="'Image bingo board for ' + alt()"
+        aria-rowcount="10"
+        aria-colcount="10"
+      >
+        @for (row of rows(); track $index; let rowIndex = $index) {
+          <div class="cell-row" ngGridRow [rowIndex]="rowIndex + 1">
+            @for (cell of row; track cell.number; let columnIndex = $index) {
+              <button
+                type="button"
+                class="cell"
+                ngGridCell
+                [rowIndex]="rowIndex + 1"
+                [colIndex]="columnIndex + 1"
+                [disabled]="cell.disabled"
+                [selectable]="mode() !== 'revealed'"
+                [selected]="isSelected(cell)"
+                [attr.aria-label]="cellLabel(cell)"
+                [class.is-configured]="mode() === 'configure' && cell.selected"
+                [class.is-red]="cell.ownership === 'red'"
+                [class.is-blue]="cell.ownership === 'blue'"
+                [class.is-shared]="cell.ownership === 'shared'"
+                [class.is-revealed-guess]="
+                  mode() === 'revealed' &&
+                  (cell.revealOutcome === 'hit' || cell.revealOutcome === 'miss')
+                "
+                [class.is-correct-unselected]="
+                  mode() === 'revealed' && cell.revealOutcome === 'correct-unselected'
+                "
+                (selectedChange)="activate(cell)"
+              >
+                <span class="cell-number" aria-hidden="true">{{ cell.number }}</span>
 
-              @if (cell.ownership !== 'none') {
-                <span class="ownership-marker" aria-hidden="true">
-                  @switch (cell.ownership) {
-                    @case ('red') { R }
-                    @case ('blue') { B }
-                    @case ('shared') { R+B }
-                  }
-                </span>
-              } @else if (mode() === 'configure' && cell.selected) {
-                <span class="ownership-marker configured-marker" aria-hidden="true">●</span>
-              }
+                @if (cell.ownership !== 'none') {
+                  <span class="ownership-marker" aria-hidden="true">
+                    @switch (cell.ownership) {
+                      @case ('red') { R }
+                      @case ('blue') { B }
+                      @case ('shared') { R+B }
+                    }
+                  </span>
+                } @else if (mode() === 'configure' && cell.selected) {
+                  <span class="ownership-marker configured-marker" aria-hidden="true">●</span>
+                }
 
-              @if (mode() === 'revealed') {
-                @switch (cell.revealOutcome) {
-                  @case ('hit') {
-                    <span class="outcome-marker hit-marker" aria-hidden="true">✓</span>
-                  }
-                  @case ('miss') {
-                    <span class="outcome-marker miss-marker" aria-hidden="true">×</span>
-                  }
-                  @case ('correct-unselected') {
-                    <span class="outcome-marker correct-marker" aria-hidden="true">●</span>
+                @if (mode() === 'revealed') {
+                  @switch (cell.revealOutcome) {
+                    @case ('hit') {
+                      <span class="outcome-marker hit-marker" aria-hidden="true">✓</span>
+                    }
+                    @case ('miss') {
+                      <span class="outcome-marker miss-marker" aria-hidden="true">×</span>
+                    }
+                    @case ('correct-unselected') {
+                      <span class="outcome-marker correct-marker" aria-hidden="true">●</span>
+                    }
                   }
                 }
-              }
-            </button>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      @if (mode() === 'configure') {
+        <div class="placement-controls">
+          @for (corner of resizeCorners; track corner) {
+            <button
+              type="button"
+              [class]="'resize-handle ' + corner"
+              [attr.aria-label]="
+                'Resize bingo grid from the ' + corner +
+                ' corner. Arrow up or right enlarges; arrow down or left shrinks. Hold Shift for larger steps.'
+              "
+              (pointerdown)="beginResize($event, corner)"
+              (pointermove)="updatePointerInteraction($event)"
+              (pointerup)="finishPointerInteraction($event)"
+              (pointercancel)="cancelPointerInteraction($event)"
+              (keydown)="resizeWithKeyboard($event, corner)"
+            ></button>
           }
         </div>
       }
