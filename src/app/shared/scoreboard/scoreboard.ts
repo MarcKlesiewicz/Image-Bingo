@@ -11,6 +11,8 @@ import { Team } from '../../models/game.models';
 export class Scoreboard {
   readonly redScore = input.required<number>();
   readonly blueScore = input.required<number>();
+  readonly redName = input.required<string>();
+  readonly blueName = input.required<string>();
   readonly currentRound = input.required<number>();
   readonly totalRounds = input.required<number>();
   readonly starter = input.required<Team>();
@@ -26,5 +28,9 @@ export class Scoreboard {
       return 'Active turn';
     }
     return 'Waiting';
+  }
+
+  protected teamName(team: Team): string {
+    return team === 'red' ? this.redName() : this.blueName();
   }
 }

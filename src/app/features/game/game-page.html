@@ -2,6 +2,8 @@
   <app-scoreboard
     [redScore]="game.scores().red"
     [blueScore]="game.scores().blue"
+    [redName]="game.redTeamName()"
+    [blueName]="game.blueTeamName()"
     [currentRound]="roundNumber()"
     [totalRounds]="totalRounds()"
     [starter]="scoreboardStarter()"
@@ -112,13 +114,13 @@
 
             <div class="team-results">
               <article class="team-result red-result">
-                <span>Red</span>
+                <span [title]="game.redTeamName()">{{ game.redTeamName() }}</span>
                 <strong>+{{ result.red.points }}</strong>
                 <small>Hits {{ cellList(result.red.hits) }} · Misses {{ cellList(result.red.misses) }}</small>
               </article>
 
               <article class="team-result blue-result">
-                <span>Blue</span>
+                <span [title]="game.blueTeamName()">{{ game.blueTeamName() }}</span>
                 <strong>+{{ result.blue.points }}</strong>
                 <small>Hits {{ cellList(result.blue.hits) }} · Misses {{ cellList(result.blue.misses) }}</small>
               </article>

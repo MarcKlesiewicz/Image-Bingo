@@ -19,6 +19,8 @@ export const CELL_NUMBERS = Array.from(
   (_, index) => index + 1,
 ) as readonly CellNumber[];
 export const MAX_GUESSES = 2;
+export const MAX_GAME_NAME_LENGTH = 48;
+export const MAX_TEAM_NAME_LENGTH = 32;
 export const DEFAULT_GRID_PLACEMENT_SIZE = 0.46;
 export const MIN_GRID_PLACEMENT_SIZE = 0.3;
 export const MAX_GRID_PLACEMENT_SIZE = 0.9;
@@ -138,6 +140,11 @@ export interface Score {
   readonly blue: number;
 }
 
+export interface TeamNames {
+  readonly red: string;
+  readonly blue: string;
+}
+
 export type Winner = Team | 'draw';
 
 export type ImportErrorReason =
@@ -158,6 +165,8 @@ export interface ImageImportSummary {
 }
 
 interface SharedGameState {
+  readonly gameName: string;
+  readonly teamNames: TeamNames;
   readonly deck: readonly DeckImage[];
   readonly configurationIndex: number | null;
   readonly importPending: boolean;

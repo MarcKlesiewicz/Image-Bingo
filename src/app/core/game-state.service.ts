@@ -13,19 +13,29 @@ import {
   gridPlacementsEqual,
   ImageImportError,
   ImageImportSummary,
+  MAX_GAME_NAME_LENGTH,
   MAX_GUESSES,
+  MAX_TEAM_NAME_LENGTH,
   normalizeGridPlacement,
   RoundSelection,
   Score,
   Team,
+  TeamNames,
   Winner,
 } from '../models/game.models';
 
 const FIRST_CELL = 1;
 const LAST_CELL = 100;
+const DEFAULT_GAME_NAME = 'Image Bingo';
+const DEFAULT_TEAM_NAMES: TeamNames = {
+  red: 'Red',
+  blue: 'Blue',
+};
 
 const INITIAL_STATE: GameState = {
   phase: 'setup',
+  gameName: DEFAULT_GAME_NAME,
+  teamNames: DEFAULT_TEAM_NAMES,
   deck: [],
   configurationIndex: null,
   importPending: false,
@@ -46,6 +56,21 @@ export class GameStateService implements OnDestroy {
 
   private readonly state = this.writableState.asReadonly();
   readonly phase = computed(() => this.state().phase);
+  readonly configuredGameName = computed(() => this.state().gameName);
+  readonly configuredTeamNames = computed(() => this.state().teamNames);
+  readonly gameName = computed(() =>
+    displayName(this.state().gameName, DEFAULT_GAME_NAME),
+  );
+  readonly redTeamName = computed(() =>
+    displayName(this.state().teamNames.red, DEFAULT_TEAM_NAMES.red),
+  );
+  readonly blueTeamName = computed(() =>
+    displayName(this.state().teamNames.blue, DEFAULT_TEAM_NAMES.blue),
+  );
+  readonly isInProgress = computed(() => {
+    const phase = this.state().phase;
+    return phase !== 'setup' && phase !== 'finished';
+  });
   readonly deck = computed(() => this.state().deck);
   readonly importPending = computed(() => this.state().importPending);
   readonly importErrors = computed(() => this.state().importErrors);
@@ -169,6 +194,43 @@ export class GameStateService implements OnDestroy {
   });
   readonly routePhase = computed<GameRoute>(() => routeForPhase(this.state().phase));
   readonly authoritativeRoute = computed(() => `/${this.routePhase()}`);
+
+  setGameName(name: string): void {
+    const state = this.state();
+    if (state.phase !== 'setup') {
+      return;
+    }
+    const gameName = name.slice(0, MAX_GAME_NAME_LENGTH);
+    if (gameName === state.gameName) {
+      return;
+    }
+    this.writableState.set({
+      ...state,
+      gameName,
+    });
+  }
+
+  setTeamName(team: Team, name: string): void {
+    const state = this.state();
+    if (state.phase !== 'setup') {
+      return;
+    }
+    const teamName = name.slice(0, MAX_TEAM_NAME_LENGTH);
+    if (teamName === state.teamNames[team]) {
+      return;
+    }
+    this.writableState.set({
+      ...state,
+      teamNames: {
+        ...state.teamNames,
+        [team]: teamName,
+      },
+    });
+  }
+
+  teamName(team: Team): string {
+    return team === 'red' ? this.redTeamName() : this.blueTeamName();
+  }
 
   async importFiles(input: FileList | readonly File[]): Promise<void> {
     const files = Array.from(input);
@@ -372,7 +434,11 @@ export class GameStateService implements OnDestroy {
     }
     this.importGeneration += 1;
     this.releaseAllObjectUrls();
-    this.writableState.set(INITIAL_STATE);
+    this.writableState.set({
+      ...INITIAL_STATE,
+      gameName: state.gameName,
+      teamNames: state.teamNames,
+    });
   }
 
   startGame(): void {
@@ -494,6 +560,8 @@ export class GameStateService implements OnDestroy {
     }
     this.writableState.set({
       phase: 'setup',
+      gameName: state.gameName,
+      teamNames: state.teamNames,
       deck: state.deck,
       configurationIndex: state.deck.length > 0 ? 0 : null,
       importPending: false,
@@ -630,6 +698,10 @@ function starterForIndex(index: number): Team {
 
 function otherTeam(team: Team): Team {
   return team === 'red' ? 'blue' : 'red';
+}
+
+function displayName(value: string, fallback: string): string {
+  return value.trim() || fallback;
 }
 
 function routeForPhase(phase: GamePhase): GameRoute {

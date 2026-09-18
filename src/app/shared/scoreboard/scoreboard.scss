@@ -64,11 +64,14 @@
 }
 
 .team-name {
+  overflow: hidden;
   font-family: var(--font-display);
   font-size: clamp(1rem, 2vw, 1.45rem);
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-state {

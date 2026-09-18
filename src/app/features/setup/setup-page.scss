@@ -120,6 +120,42 @@ h3 {
   align-items: center;
 }
 
+.name-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.name-fields label {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.name-fields input {
+  width: 100%;
+  min-height: var(--control-min-height);
+  padding: 0.65rem 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #080f20;
+  color: var(--color-text);
+  text-transform: none;
+}
+
+.red-name-field input {
+  border-left-color: var(--color-team-red);
+}
+
+.blue-name-field input {
+  border-left-color: var(--color-team-blue);
+}
+
 .file-picker {
   position: relative;
   display: grid;
@@ -509,6 +545,10 @@ button:disabled {
 }
 
 @media (max-width: 42rem) {
+  .name-fields {
+    grid-template-columns: 1fr;
+  }
+
   .hero,
   .section-heading,
   .board-intro {

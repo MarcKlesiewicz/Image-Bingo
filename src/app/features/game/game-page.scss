@@ -128,17 +128,21 @@ h2 {
 
 .turn-summary h2,
 .result-summary h2 {
+  min-width: 0;
   margin-bottom: 0.35rem;
   font-size: clamp(1.15rem, 2vw, 1.6rem);
   line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .turn-summary p:last-child,
 .result-summary p {
+  min-width: 0;
   margin-bottom: 0;
   color: var(--color-text-muted);
   font-size: 0.86rem;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .control-panel,
@@ -250,6 +254,11 @@ button:disabled {
 .team-result > strong {
   font-family: var(--font-display);
   text-transform: uppercase;
+}
+
+.team-result > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .team-result > strong {

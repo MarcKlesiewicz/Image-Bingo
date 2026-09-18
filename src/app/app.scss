@@ -34,6 +34,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
+  min-width: 0;
   min-height: var(--control-min-height);
   color: var(--color-text);
   font-family: var(--font-display);
@@ -42,6 +43,13 @@
   letter-spacing: 0.04em;
   text-decoration: none;
   text-transform: uppercase;
+}
+
+.brand span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .brand [aria-hidden='true'] {

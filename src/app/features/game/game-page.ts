@@ -25,13 +25,6 @@ import {
 } from '../../shared/image-grid/image-grid';
 import { Scoreboard } from '../../shared/scoreboard/scoreboard';
 
-const OWNERSHIP_LABELS: Record<ImageGridOwnership, string> = {
-  none: 'No team selected this cell',
-  red: 'Selected by Red only',
-  blue: 'Selected by Blue only',
-  shared: 'Selected by both Red and Blue',
-};
-
 const RESULT_LABELS: Record<Exclude<ImageGridRevealOutcome, null>, string> = {
   hit: 'Hit. This guessed cell is correct',
   miss: 'Miss. This guessed cell is not correct',
@@ -216,7 +209,7 @@ export class GamePage {
     }
 
     this.announcement.set(
-      `Round ${this.roundNumber()} revealed. Red scored ${result.red.points}; Blue scored ${result.blue.points}.`,
+      `Round ${this.roundNumber()} revealed. ${this.teamLabel('red')} scored ${result.red.points}; ${this.teamLabel('blue')} scored ${result.blue.points}.`,
     );
     this.scheduleFocus(() => this.resultHeading()?.nativeElement.focus());
   }
@@ -251,7 +244,7 @@ export class GamePage {
   }
 
   protected teamLabel(team: Team): string {
-    return team === 'red' ? 'Red' : 'Blue';
+    return this.game.teamName(team);
   }
 
   protected cellList(cells: readonly number[]): string {
@@ -292,8 +285,9 @@ export class GamePage {
     revealOutcome,
     phase,
   }: CellDescriptionContext): string {
+    const ownershipLabel = this.ownershipLabel(ownership);
     if (phase === 'revealed') {
-      return `${OWNERSHIP_LABELS[ownership]}. ${
+      return `${ownershipLabel}. ${
         revealOutcome === null
           ? 'Not guessed and not configured as correct. The whole image is revealed'
           : RESULT_LABELS[revealOutcome]
@@ -301,20 +295,33 @@ export class GamePage {
     }
 
     if (activeTeam === null) {
-      return `${OWNERSHIP_LABELS[ownership]}. Both teams are locked. Selection is unavailable until reveal`;
+      return `${ownershipLabel}. Both teams are locked. Selection is unavailable until reveal`;
     }
 
     const team = this.teamLabel(activeTeam);
     if (selectedByActive) {
-      return `${OWNERSHIP_LABELS[ownership]}. ${team} selected this cell. Available to deselect before locking`;
+      return `${ownershipLabel}. ${team} selected this cell. Available to deselect before locking`;
     }
     if (disabled) {
-      return `${OWNERSHIP_LABELS[ownership]}. ${team} has not selected this cell. Unavailable because ${team} already has two guesses; deselect one to replace it`;
+      return `${ownershipLabel}. ${team} has not selected this cell. Unavailable because ${team} already has two guesses; deselect one to replace it`;
     }
     if (ownership !== 'none') {
-      return `${OWNERSHIP_LABELS[ownership]}. ${team} has not selected this cell. Available to select as a shared guess`;
+      return `${ownershipLabel}. ${team} has not selected this cell. Available to select as a shared guess`;
     }
-    return `${OWNERSHIP_LABELS[ownership]}. ${team} has not selected this cell. Available to select`;
+    return `${ownershipLabel}. ${team} has not selected this cell. Available to select`;
+  }
+
+  private ownershipLabel(ownership: ImageGridOwnership): string {
+    if (ownership === 'none') {
+      return 'No team selected this cell';
+    }
+    if (ownership === 'red') {
+      return `Selected by ${this.teamLabel('red')} (red) only`;
+    }
+    if (ownership === 'blue') {
+      return `Selected by ${this.teamLabel('blue')} (blue) only`;
+    }
+    return `Selected by both ${this.teamLabel('red')} (red) and ${this.teamLabel('blue')} (blue)`;
   }
 
   private scheduleFocus(action: () => void): void {

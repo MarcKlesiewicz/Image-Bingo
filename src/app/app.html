@@ -1,9 +1,13 @@
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
 <header class="app-header" [class.is-play-stage]="game.routePhase() === 'play'">
-  <a class="brand" [routerLink]="game.authoritativeRoute()" aria-label="Image Bingo, current game stage">
+  <a
+    class="brand"
+    [routerLink]="game.authoritativeRoute()"
+    [attr.aria-label]="headerTitle() + ', current game stage'"
+  >
     <span aria-hidden="true">◎</span>
-    <span>Image Bingo</span>
+    <span>{{ headerTitle() }}</span>
   </a>
 
   <nav aria-label="Game progress">

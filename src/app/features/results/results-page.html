@@ -44,7 +44,7 @@
 
     <div class="final-scores" role="group" aria-label="Final team scores">
       <section class="team-score red-score" [class.is-winner]="game.winner() === 'red'" aria-labelledby="red-score-heading">
-        <h3 id="red-score-heading"><span aria-hidden="true">▲</span> Red team</h3>
+        <h3 id="red-score-heading"><span aria-hidden="true">▲</span> {{ game.redTeamName() }}</h3>
         <p class="score" [attr.aria-label]="game.scores().red + ' points'">{{ game.scores().red }}</p>
         <span class="team-result-label">
           {{ game.winner() === 'red' ? 'Winner' : game.winner() === 'draw' ? 'Joint result' : 'Runner-up' }}
@@ -54,7 +54,7 @@
       <div class="score-divider" aria-hidden="true">–</div>
 
       <section class="team-score blue-score" [class.is-winner]="game.winner() === 'blue'" aria-labelledby="blue-score-heading">
-        <h3 id="blue-score-heading"><span aria-hidden="true">■</span> Blue team</h3>
+        <h3 id="blue-score-heading"><span aria-hidden="true">■</span> {{ game.blueTeamName() }}</h3>
         <p class="score" [attr.aria-label]="game.scores().blue + ' points'">{{ game.scores().blue }}</p>
         <span class="team-result-label">
           {{ game.winner() === 'blue' ? 'Winner' : game.winner() === 'draw' ? 'Joint result' : 'Runner-up' }}
@@ -77,8 +77,8 @@
         <li>
           <span class="round-number" aria-hidden="true">{{ roundIndex + 1 }}</span>
           <span class="round-image" [title]="round.imageName">{{ round.imageName }}</span>
-          <span class="round-points red-points"><span aria-hidden="true">▲</span> Red +{{ round.red.points }}</span>
-          <span class="round-points blue-points"><span aria-hidden="true">■</span> Blue +{{ round.blue.points }}</span>
+          <span class="round-points red-points"><span aria-hidden="true">▲</span> {{ game.redTeamName() }} +{{ round.red.points }}</span>
+          <span class="round-points blue-points"><span aria-hidden="true">■</span> {{ game.blueTeamName() }} +{{ round.blue.points }}</span>
         </li>
       }
     </ol>

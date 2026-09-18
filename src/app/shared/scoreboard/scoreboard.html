@@ -3,11 +3,11 @@
     class="team-score red-score"
     [class.is-active]="activeTeam() === 'red'"
     [class.is-locked]="redLocked()"
-    aria-label="Red team score and turn state"
+    [attr.aria-label]="redName() + ', red team score and turn state'"
   >
     <span class="team-symbol" aria-hidden="true">▲</span>
     <div class="team-copy">
-      <span class="team-name">Red</span>
+      <span class="team-name" [title]="redName()">{{ redName() }}</span>
       <span class="team-state">
         @if (redLocked()) {
           <span aria-hidden="true">✓</span>
@@ -25,18 +25,18 @@
   <div class="round-status">
     <span class="round-label">Round</span>
     <strong>{{ currentRound() }}<span aria-hidden="true"> / </span><span class="visually-hidden"> of </span>{{ totalRounds() }}</strong>
-    <span class="starter"><span aria-hidden="true">◆</span> {{ starter() === 'red' ? 'Red' : 'Blue' }} started</span>
+    <span class="starter"><span aria-hidden="true">◆</span> {{ teamName(starter()) }} started</span>
   </div>
 
   <article
     class="team-score blue-score"
     [class.is-active]="activeTeam() === 'blue'"
     [class.is-locked]="blueLocked()"
-    aria-label="Blue team score and turn state"
+    [attr.aria-label]="blueName() + ', blue team score and turn state'"
   >
     <span class="team-symbol" aria-hidden="true">■</span>
     <div class="team-copy">
-      <span class="team-name">Blue</span>
+      <span class="team-name" [title]="blueName()">{{ blueName() }}</span>
       <span class="team-state">
         @if (blueLocked()) {
           <span aria-hidden="true">✓</span>

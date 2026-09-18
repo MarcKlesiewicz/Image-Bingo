@@ -15,6 +15,9 @@ import {
   CELL_NUMBERS,
   CellNumber,
   GridPlacement,
+  MAX_GAME_NAME_LENGTH,
+  MAX_TEAM_NAME_LENGTH,
+  Team,
 } from '../../models/game.models';
 import {
   ImageGrid,
@@ -39,6 +42,8 @@ export class SetupPage {
     viewChildren<ElementRef<HTMLButtonElement>>('incompleteButton');
   private readonly setupNotice = signal('');
 
+  protected readonly maxGameNameLength = MAX_GAME_NAME_LENGTH;
+  protected readonly maxTeamNameLength = MAX_TEAM_NAME_LENGTH;
   protected readonly deckCount = computed(() => this.game.deck().length);
   protected readonly hasDeck = computed(() => this.deckCount() > 0);
   protected readonly activeIndex = computed(() => this.game.configurationIndex());
@@ -112,6 +117,14 @@ export class SetupPage {
     } finally {
       input.value = '';
     }
+  }
+
+  protected updateGameName(event: Event): void {
+    this.game.setGameName((event.currentTarget as HTMLInputElement).value);
+  }
+
+  protected updateTeamName(team: Team, event: Event): void {
+    this.game.setTeamName(team, (event.currentTarget as HTMLInputElement).value);
   }
 
   protected selectImage(index: number, focusHeading = false): void {

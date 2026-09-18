@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, HostListener, computed, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 
 import { GameStateService } from './core/game-state.service';
@@ -28,6 +28,18 @@ export class App {
   protected readonly shellAnnouncement = computed(
     () => `${this.stageLabel(this.game.routePhase())} stage.`,
   );
+  protected readonly headerTitle = computed(() =>
+    this.game.routePhase() === 'setup' ? 'Image Bingo' : this.game.gameName(),
+  );
+
+  @HostListener('window:beforeunload', ['$event'])
+  protected warnBeforeLeaving(event: BeforeUnloadEvent): void {
+    if (!this.game.isInProgress()) {
+      return;
+    }
+    event.preventDefault();
+    event.returnValue = '';
+  }
 
   protected isCurrent(item: NavigationItem): boolean {
     return item.route === this.game.routePhase();

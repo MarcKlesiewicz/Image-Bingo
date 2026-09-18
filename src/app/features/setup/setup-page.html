@@ -16,6 +16,49 @@
     </div>
   </header>
 
+  <section class="names-panel panel" aria-labelledby="names-heading">
+    <div class="section-heading">
+      <div>
+        <p class="step-label">Step 1</p>
+        <h2 id="names-heading">Name the game</h2>
+      </div>
+      <p>These names appear in the game header, scoreboard, and results.</p>
+    </div>
+
+    <div class="name-fields">
+      <label>
+        <span>Game name</span>
+        <input
+          type="text"
+          [maxLength]="maxGameNameLength"
+          autocomplete="off"
+          [value]="game.configuredGameName()"
+          (input)="updateGameName($event)"
+        />
+      </label>
+      <label class="red-name-field">
+        <span>Red team name</span>
+        <input
+          type="text"
+          [maxLength]="maxTeamNameLength"
+          autocomplete="off"
+          [value]="game.configuredTeamNames().red"
+          (input)="updateTeamName('red', $event)"
+        />
+      </label>
+      <label class="blue-name-field">
+        <span>Blue team name</span>
+        <input
+          type="text"
+          [maxLength]="maxTeamNameLength"
+          autocomplete="off"
+          [value]="game.configuredTeamNames().blue"
+          (input)="updateTeamName('blue', $event)"
+        />
+      </label>
+    </div>
+  </section>
+
   <section
     class="import-panel panel"
     aria-labelledby="import-heading"
@@ -23,7 +66,7 @@
   >
     <div class="section-heading">
       <div>
-        <p class="step-label">Step 1</p>
+        <p class="step-label">Step 2</p>
         <h2 id="import-heading">Add image files</h2>
       </div>
       <p>Choose one or many files. New batches are appended in selection order.</p>
@@ -67,7 +110,7 @@
     <aside class="deck-panel panel" aria-labelledby="deck-heading">
       <div class="section-heading compact">
         <div>
-          <p class="step-label">Step 2</p>
+          <p class="step-label">Step 3</p>
           <h2 id="deck-heading">Review the deck</h2>
         </div>
         @if (hasDeck()) {
@@ -132,7 +175,7 @@
     <section class="configuration-panel panel" aria-labelledby="configuration-heading">
       <div class="section-heading configuration-heading">
         <div>
-          <p class="step-label">Step 3</p>
+          <p class="step-label">Step 4</p>
           <h2 id="configuration-heading" #configurationHeading tabindex="-1">
             Mark correct cells
           </h2>
@@ -199,7 +242,7 @@
   <section class="readiness-panel panel" aria-labelledby="readiness-heading">
     <div class="section-heading compact">
       <div>
-        <p class="step-label">Step 4</p>
+        <p class="step-label">Step 5</p>
         <h2 id="readiness-heading">Ready for round one?</h2>
       </div>
       <span class="readiness-state" [class.is-ready]="game.canStart()">
