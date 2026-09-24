@@ -164,6 +164,27 @@
 .ownership-marker {
   right: 0.12rem;
   bottom: 0.12rem;
+  display: flex;
+  gap: clamp(0.08rem, 0.8cqi, 0.18rem);
+  padding: clamp(0.08rem, 0.8cqi, 0.16rem);
+  border-color: rgb(255 255 255 / 72%);
+  border-radius: 999px;
+}
+
+.ownership-dot {
+  width: clamp(0.34rem, 2.5cqi, 0.72rem);
+  aspect-ratio: 1;
+  border: 1px solid rgb(255 255 255 / 78%);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 75%);
+}
+
+.red-ownership {
+  background: var(--color-team-red);
+}
+
+.blue-ownership {
+  background: var(--color-team-blue);
 }
 
 .outcome-marker {

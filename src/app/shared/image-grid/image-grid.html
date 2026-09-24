@@ -82,10 +82,11 @@
 
                 @if (cell.ownership !== 'none') {
                   <span class="ownership-marker" aria-hidden="true">
-                    @switch (cell.ownership) {
-                      @case ('red') { R }
-                      @case ('blue') { B }
-                      @case ('shared') { R+B }
+                    @if (cell.ownership === 'red' || cell.ownership === 'shared') {
+                      <span class="ownership-dot red-ownership"></span>
+                    }
+                    @if (cell.ownership === 'blue' || cell.ownership === 'shared') {
+                      <span class="ownership-dot blue-ownership"></span>
                     }
                   </span>
                 } @else if (mode() === 'configure' && cell.selected) {
