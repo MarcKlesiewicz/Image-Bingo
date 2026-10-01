@@ -2,10 +2,12 @@ import { Injectable, OnDestroy, computed, signal } from '@angular/core';
 
 import {
   CellNumber,
+  CELL_COUNT,
   CompletedRound,
   CompletedTeamRound,
   createCenteredGridPlacement,
   DeckImage,
+  DEFAULT_GUESSES_PER_TEAM,
   GamePhase,
   GameRoute,
   GameState,
@@ -14,7 +16,6 @@ import {
   ImageImportError,
   ImageImportSummary,
   MAX_GAME_NAME_LENGTH,
-  MAX_GUESSES,
   MAX_TEAM_NAME_LENGTH,
   normalizeGridPlacement,
   RoundSelection,
@@ -36,6 +37,7 @@ const INITIAL_STATE: GameState = {
   phase: 'setup',
   gameName: DEFAULT_GAME_NAME,
   teamNames: DEFAULT_TEAM_NAMES,
+  guessesPerTeam: DEFAULT_GUESSES_PER_TEAM,
   deck: [],
   configurationIndex: null,
   importPending: false,
@@ -58,6 +60,7 @@ export class GameStateService implements OnDestroy {
   readonly phase = computed(() => this.state().phase);
   readonly configuredGameName = computed(() => this.state().gameName);
   readonly configuredTeamNames = computed(() => this.state().teamNames);
+  readonly guessesPerTeam = computed(() => this.state().guessesPerTeam);
   readonly gameName = computed(() =>
     displayName(this.state().gameName, DEFAULT_GAME_NAME),
   );
@@ -127,7 +130,9 @@ export class GameStateService implements OnDestroy {
     }
     return team === 'red' ? this.redSelections() : this.blueSelections();
   });
-  readonly remainingGuesses = computed(() => MAX_GUESSES - this.activeSelections().length);
+  readonly remainingGuesses = computed(
+    () => this.guessesPerTeam() - this.activeSelections().length,
+  );
   readonly canLock = computed(() => {
     const state = this.state();
     const team = this.activeTeam();
@@ -135,14 +140,14 @@ export class GameStateService implements OnDestroy {
       team !== null &&
       state.round !== null &&
       !state.round.locks[team] &&
-      state.round.selections[team].length === MAX_GUESSES
+      state.round.selections[team].length === state.guessesPerTeam
     );
   });
   readonly canReveal = computed(() => {
     const state = this.state();
     return (
       state.phase === 'ready-to-reveal' &&
-      bothTeamsAreComplete(state.round) &&
+      bothTeamsAreComplete(state.round, state.guessesPerTeam) &&
       !state.completedRounds.some((round) => round.imageId === state.round.imageId)
     );
   });
@@ -226,6 +231,20 @@ export class GameStateService implements OnDestroy {
         [team]: teamName,
       },
     });
+  }
+
+  setGuessesPerTeam(guessesPerTeam: number): void {
+    const state = this.state();
+    if (
+      state.phase !== 'setup' ||
+      !Number.isInteger(guessesPerTeam) ||
+      guessesPerTeam < 1 ||
+      guessesPerTeam > CELL_COUNT ||
+      guessesPerTeam === state.guessesPerTeam
+    ) {
+      return;
+    }
+    this.writableState.set({ ...state, guessesPerTeam });
   }
 
   teamName(team: Team): string {
@@ -347,6 +366,35 @@ export class GameStateService implements OnDestroy {
     this.writableState.set({ ...state, configurationIndex: index });
   }
 
+  moveImage(imageId: string, direction: 'earlier' | 'later'): void {
+    const state = this.state();
+    if (state.phase !== 'setup') {
+      return;
+    }
+
+    const imageIndex = state.deck.findIndex((image) => image.id === imageId);
+    const targetIndex = imageIndex + (direction === 'earlier' ? -1 : 1);
+    if (
+      imageIndex < 0 ||
+      targetIndex < 0 ||
+      targetIndex >= state.deck.length
+    ) {
+      return;
+    }
+
+    const configuredImage =
+      state.configurationIndex === null
+        ? null
+        : (state.deck[state.configurationIndex] ?? null);
+    const deck = [...state.deck];
+    [deck[imageIndex], deck[targetIndex]] = [deck[targetIndex], deck[imageIndex]];
+    const configurationIndex =
+      configuredImage === null
+        ? null
+        : deck.findIndex((image) => image.id === configuredImage.id);
+    this.writableState.set({ ...state, deck, configurationIndex });
+  }
+
   toggleCorrectCell(imageId: string, cell: CellNumber): void {
     const state = this.state();
     if (state.phase !== 'setup' || !isCellNumber(cell)) {
@@ -438,6 +486,7 @@ export class GameStateService implements OnDestroy {
       ...INITIAL_STATE,
       gameName: state.gameName,
       teamNames: state.teamNames,
+      guessesPerTeam: state.guessesPerTeam,
     });
   }
 
@@ -448,10 +497,27 @@ export class GameStateService implements OnDestroy {
     }
     this.writableState.set({
       ...state,
+      phase: 'presentation',
+      currentImageIndex: null,
+      completedRounds: [],
+      round: null,
+    });
+  }
+
+  beginGame(): void {
+    const state = this.state();
+    if (state.phase !== 'presentation') {
+      return;
+    }
+    const firstImage = state.deck[0];
+    if (firstImage === undefined) {
+      return;
+    }
+    this.writableState.set({
+      ...state,
       phase: 'guessing-first',
       currentImageIndex: 0,
-      completedRounds: [],
-      round: createRound(state.deck[0].id, 0),
+      round: createRound(firstImage.id, 0),
     });
   }
 
@@ -469,7 +535,7 @@ export class GameStateService implements OnDestroy {
 
     const current = state.round.selections[team];
     const selected = current.includes(cell);
-    if (!selected && current.length >= MAX_GUESSES) {
+    if (!selected && current.length >= state.guessesPerTeam) {
       return;
     }
 
@@ -490,7 +556,7 @@ export class GameStateService implements OnDestroy {
       (state.phase !== 'guessing-first' && state.phase !== 'guessing-second') ||
       team === null ||
       state.round.locks[team] ||
-      state.round.selections[team].length !== MAX_GUESSES
+      state.round.selections[team].length !== state.guessesPerTeam
     ) {
       return;
     }
@@ -562,6 +628,7 @@ export class GameStateService implements OnDestroy {
       phase: 'setup',
       gameName: state.gameName,
       teamNames: state.teamNames,
+      guessesPerTeam: state.guessesPerTeam,
       deck: state.deck,
       configurationIndex: state.deck.length > 0 ? 0 : null,
       importPending: false,
@@ -667,12 +734,15 @@ function completeTeamRound(
   };
 }
 
-function bothTeamsAreComplete(round: RoundSelection): boolean {
+function bothTeamsAreComplete(
+  round: RoundSelection,
+  guessesPerTeam: number,
+): boolean {
   return (
     round.locks.red &&
     round.locks.blue &&
-    round.selections.red.length === MAX_GUESSES &&
-    round.selections.blue.length === MAX_GUESSES
+    round.selections.red.length === guessesPerTeam &&
+    round.selections.blue.length === guessesPerTeam
   );
 }
 
