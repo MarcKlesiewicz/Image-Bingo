@@ -1,22 +1,25 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  OnDestroy,
   computed,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from '../../core/game-state.service';
 import {
   CELL_NUMBERS,
   CellNumber,
   GamePhase,
-  MAX_GUESSES,
   Team,
 } from '../../models/game.models';
+import { faArrowRight, faPlay } from '../../shared/icons/game-icons';
 import {
   ImageGrid,
   ImageGridCellView,
@@ -42,16 +45,18 @@ interface CellDescriptionContext {
 
 @Component({
   selector: 'app-game-page',
-  imports: [ImageGrid, Scoreboard],
+  imports: [FaIconComponent, ImageGrid, Scoreboard],
   templateUrl: './game-page.html',
   styleUrl: './game-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GamePage {
+export class GamePage implements AfterViewInit, OnDestroy {
   protected readonly game = inject(GameStateService);
   private readonly router = inject(Router);
 
   private readonly imageGrid = viewChild(ImageGrid);
+  private readonly presentationHeading =
+    viewChild<ElementRef<HTMLHeadingElement>>('presentationHeading');
   private readonly roundHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('roundHeading');
   private readonly revealButton =
@@ -59,8 +64,20 @@ export class GamePage {
   private readonly resultHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('resultHeading');
   private readonly announcement = signal('');
+  private readonly revealCountdown = signal<number | null>(null);
+  private revealTimer: ReturnType<typeof setInterval> | null = null;
 
   protected readonly liveAnnouncement = this.announcement.asReadonly();
+  protected readonly arrowRightIcon = faArrowRight;
+  protected readonly playIcon = faPlay;
+  protected readonly countdown = this.revealCountdown.asReadonly();
+  protected readonly revealButtonText = computed(() => {
+    const count = this.revealCountdown();
+    return count === null ? 'Reveal image' : String(count);
+  });
+  protected readonly totalLockedGuesses = computed(
+    () => this.game.guessesPerTeam() * 2,
+  );
   private readonly correctCells = computed(
     () => new Set(this.game.currentGameImage()?.correctCells ?? []),
   );
@@ -90,7 +107,7 @@ export class GamePage {
     if (team !== null) {
       const remaining = this.game.remainingGuesses();
       if (remaining === 0) {
-        return `${this.teamLabel(team)} has two guesses. Deselect a chosen cell to replace it, or lock the turn.`;
+        return `${this.teamLabel(team)} has ${this.guessCountLabel(this.game.guessesPerTeam())}. Deselect a chosen cell to replace it, or lock the turn.`;
       }
       return `Select ${remaining} more ${remaining === 1 ? 'cell' : 'cells'} for ${this.teamLabel(team)}. Guesses stay editable until Lock guesses.`;
     }
@@ -99,6 +116,33 @@ export class GamePage {
     }
     return 'Review both teams’ hits and misses, then continue when the room is ready.';
   });
+
+  ngAfterViewInit(): void {
+    if (this.game.phase() === 'presentation') {
+      this.scheduleFocus(() => this.presentationHeading()?.nativeElement.focus());
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.clearRevealTimer();
+  }
+
+  protected beginGame(): void {
+    if (this.game.phase() !== 'presentation') {
+      return;
+    }
+
+    this.game.beginGame();
+    if (this.game.phase() !== 'guessing-first') {
+      return;
+    }
+
+    const starter = this.game.starter();
+    this.announcement.set(
+      `Round ${this.roundNumber()} is ready. ${starter === null ? '' : `${this.teamLabel(starter)} starts.`}`.trim(),
+    );
+    this.scheduleFocus(() => this.roundHeading()?.nativeElement.focus());
+  }
   protected readonly gridCells = computed<readonly ImageGridCellView[]>(() => {
     const red = new Set(this.game.redSelections());
     const blue = new Set(this.game.blueSelections());
@@ -153,7 +197,7 @@ export class GamePage {
     const after = this.game.activeSelections().length;
     if (before === after && !wasSelected) {
       this.announcement.set(
-        `${this.teamLabel(team)} already has two guesses. Deselect one before choosing another cell.`,
+        `${this.teamLabel(team)} already has ${this.guessCountLabel(this.game.guessesPerTeam())}. Deselect one before choosing another cell.`,
       );
       return;
     }
@@ -166,12 +210,13 @@ export class GamePage {
       return;
     }
 
+    const guessLimit = this.game.guessesPerTeam();
     const limitMessage =
-      after === MAX_GUESSES
-        ? ' Two guesses selected. Other cells are unavailable until one is deselected or the turn is locked.'
+      after === guessLimit
+        ? ` ${this.guessCountLabel(guessLimit, true)} selected. Other cells are unavailable until one is deselected or the turn is locked.`
         : '';
     this.announcement.set(
-      `${this.teamLabel(team)} selected cell ${cell}. ${after} of ${MAX_GUESSES} guesses selected.${limitMessage}`,
+      `${this.teamLabel(team)} selected cell ${cell}. ${after} of ${guessLimit} ${this.guessNoun(guessLimit)} selected.${limitMessage}`,
     );
   }
 
@@ -185,31 +230,55 @@ export class GamePage {
     const nextTeam = this.game.activeTeam();
     if (nextTeam !== null) {
       this.announcement.set(
-        `${this.teamLabel(team)} locked two guesses. ${this.teamLabel(nextTeam)} team now chooses.`,
+        `${this.teamLabel(team)} locked ${this.guessCountLabel(this.game.guessesPerTeam())}. ${this.teamLabel(nextTeam)} team now chooses.`,
       );
       this.scheduleFocus(() => this.imageGrid()?.focusEntry());
       return;
     }
 
     this.announcement.set(
-      `${this.teamLabel(team)} locked two guesses. Both teams are locked and Reveal is available.`,
+      `${this.teamLabel(team)} locked ${this.guessCountLabel(this.game.guessesPerTeam())}. Both teams are locked and Reveal is available.`,
     );
     this.scheduleFocus(() => this.revealButton()?.nativeElement.focus());
   }
 
   protected revealRound(): void {
-    if (!this.game.canReveal()) {
+    if (!this.game.canReveal() || this.revealCountdown() !== null) {
       return;
     }
 
+    this.revealCountdown.set(3);
+    this.announcement.set('Reveal in 3.');
+    this.revealTimer = setInterval(() => {
+      if (!this.game.canReveal()) {
+        this.clearRevealTimer();
+        this.revealCountdown.set(null);
+        return;
+      }
+
+      const next = (this.revealCountdown() ?? 1) - 1;
+      this.revealCountdown.set(next);
+      if (next > 0) {
+        this.announcement.set(`Reveal in ${next}.`);
+        return;
+      }
+
+      this.clearRevealTimer();
+      this.completeReveal();
+    }, 1_000);
+  }
+
+  private completeReveal(): void {
     this.game.reveal();
     const result = this.game.currentCompletedRound();
     if (result === null || this.game.phase() !== 'revealed') {
+      this.revealCountdown.set(null);
       return;
     }
 
+    this.revealCountdown.set(null);
     this.announcement.set(
-      `Round ${this.roundNumber()} revealed. ${this.teamLabel('red')} scored ${result.red.points}; ${this.teamLabel('blue')} scored ${result.blue.points}.`,
+      `Reveal countdown 0. Round ${this.roundNumber()} revealed. ${this.teamLabel('red')} scored ${result.red.points}; ${this.teamLabel('blue')} scored ${result.blue.points}.`,
     );
     this.scheduleFocus(() => this.resultHeading()?.nativeElement.focus());
   }
@@ -303,7 +372,7 @@ export class GamePage {
       return `${ownershipLabel}. ${team} selected this cell. Available to deselect before locking`;
     }
     if (disabled) {
-      return `${ownershipLabel}. ${team} has not selected this cell. Unavailable because ${team} already has two guesses; deselect one to replace it`;
+      return `${ownershipLabel}. ${team} has not selected this cell. Unavailable because ${team} already has ${this.guessCountLabel(this.game.guessesPerTeam())}; deselect one to replace it`;
     }
     if (ownership !== 'none') {
       return `${ownershipLabel}. ${team} has not selected this cell. Available to select as a shared guess`;
@@ -322,6 +391,23 @@ export class GamePage {
       return `Selected by ${this.teamLabel('blue')} (blue) only`;
     }
     return `Selected by both ${this.teamLabel('red')} (red) and ${this.teamLabel('blue')} (blue)`;
+  }
+
+  protected guessNoun(count: number): 'guess' | 'guesses' {
+    return count === 1 ? 'guess' : 'guesses';
+  }
+
+  private guessCountLabel(count: number, sentenceStart = false): string {
+    const label = `${count} ${this.guessNoun(count)}`;
+    return sentenceStart ? `${label.charAt(0).toUpperCase()}${label.slice(1)}` : label;
+  }
+
+  private clearRevealTimer(): void {
+    if (this.revealTimer === null) {
+      return;
+    }
+    clearInterval(this.revealTimer);
+    this.revealTimer = null;
   }
 
   private scheduleFocus(action: () => void): void {

@@ -31,7 +31,8 @@ h2 {
 
 .board-panel,
 .round-sidebar,
-.missing-round {
+.missing-round,
+.presentation-screen {
   min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -42,37 +43,96 @@ h2 {
   padding: 0.35rem;
 }
 
-.board-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 2rem;
-  padding: 0.15rem 0.35rem 0.4rem;
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.board-meta span {
-  flex: none;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.board-meta strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--color-text);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .board-panel app-image-grid {
   display: block;
   width: 100%;
   margin-inline: auto;
   --game-board-max-height: calc(100dvh - 13rem);
+}
+
+.presentation-screen {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: clamp(1.1rem, 3vw, 2rem);
+  min-height: min(42rem, calc(100dvh - 8rem));
+  padding: clamp(2rem, 7vw, 6rem) clamp(1rem, 5vw, 4rem);
+  overflow: hidden;
+  text-align: center;
+  background:
+    radial-gradient(circle at 18% 18%, rgb(255 82 112 / 16%), transparent 33%),
+    radial-gradient(circle at 82% 82%, rgb(72 140 255 / 18%), transparent 36%),
+    var(--color-surface);
+}
+
+.presentation-screen::before {
+  position: absolute;
+  z-index: -1;
+  width: min(76vw, 42rem);
+  aspect-ratio: 1;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 50%;
+  content: '';
+  box-shadow:
+    0 0 0 4rem rgb(255 255 255 / 2%),
+    0 0 0 8rem rgb(255 255 255 / 1%);
+}
+
+.presentation-kicker {
+  margin-bottom: -0.75rem;
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.presentation-screen h1 {
+  max-width: 18ch;
+  margin-bottom: 0;
+  font-size: clamp(2.5rem, 8vw, 6.75rem);
+  line-height: 0.9;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.presentation-screen h1:focus {
+  outline: none;
+}
+
+.presentation-matchup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.45em;
+  margin-bottom: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 4vw, 2.4rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.presentation-matchup .red-team {
+  color: var(--color-team-red);
+}
+
+.presentation-matchup .blue-team {
+  color: var(--color-team-blue);
+}
+
+.presentation-matchup span {
+  color: var(--color-text-muted);
+  font-size: 0.65em;
+}
+
+.start-game-action {
+  min-width: min(100%, 18rem);
+  min-height: 4.25rem;
+  padding-inline: 1.5rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.5rem);
 }
 
 .round-sidebar {
@@ -220,6 +280,12 @@ button:disabled {
   color: var(--color-primary-ink);
 }
 
+.reveal-action.is-counting {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 1;
+}
+
 .result-summary {
   display: grid;
   gap: 0.1rem;
@@ -340,12 +406,6 @@ button:disabled {
     grid-column: 1;
   }
 
-  .board-meta {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-
   .board-panel app-image-grid {
     --game-board-max-height: calc(100dvh - 22rem);
   }
@@ -363,7 +423,8 @@ button:disabled {
   .selection-readout,
   .team-result,
   .unguessed-correct,
-  .missing-round {
+  .missing-round,
+  .presentation-screen {
     border-color: CanvasText;
     background: Canvas;
     color: CanvasText;
