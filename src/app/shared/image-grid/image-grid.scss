@@ -4,27 +4,34 @@
 }
 
 .board-scroll {
+  box-sizing: border-box;
   max-width: 100%;
-  overflow: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   padding: 0.25rem;
 }
 
-.placement-toolbar {
-  display: flex;
-  width: min(100%, 90rem);
-  box-sizing: border-box;
-  justify-content: center;
-  padding: 0.25rem 0.25rem 0.5rem;
-  background: #10151f;
+.board-scroll.is-configuring {
+  padding-top: 3.25rem;
+  overflow: visible;
 }
 
 .image-board {
   position: relative;
   width: min(100%, 90rem);
-  overflow: hidden;
+  min-width: 0;
+  margin-inline: auto;
   background: #10151f;
   isolation: isolate;
+}
+
+.image-board.is-configuring {
+  width: min(
+    100%,
+    90rem,
+    calc(var(--configuration-board-max-height, 72dvh) * var(--image-aspect))
+  );
+  overflow: visible;
 }
 
 .image-board.is-covered,
@@ -35,6 +42,7 @@
   );
   min-width: 0;
   margin-inline: auto;
+  overflow: hidden;
 }
 
 .board-image {
@@ -146,10 +154,16 @@
 }
 
 .ownership-marker,
-.outcome-marker {
+.outcome-marker,
+.configured-marker {
   position: absolute;
   display: grid;
   place-items: center;
+  line-height: 0;
+}
+
+.outcome-marker,
+.configured-marker {
   min-width: clamp(0.55rem, 4.8cqi, 1.15rem);
   min-height: clamp(0.55rem, 4.8cqi, 1.15rem);
   padding: 0.06rem 0.16rem;
@@ -165,32 +179,55 @@
   right: 0.12rem;
   bottom: 0.12rem;
   display: flex;
-  gap: clamp(0.08rem, 0.8cqi, 0.18rem);
-  padding: clamp(0.08rem, 0.8cqi, 0.16rem);
-  border-color: rgb(255 255 255 / 72%);
+  gap: clamp(0.04rem, 0.5cqi, 0.1rem);
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(0.04rem, 0.45cqi, 0.09rem);
+  border: 1px solid rgb(255 255 255 / 72%);
   border-radius: 999px;
+  background: #0b1018;
+  color: #fff;
 }
 
 .ownership-dot {
-  width: clamp(0.34rem, 2.5cqi, 0.72rem);
-  aspect-ratio: 1;
-  border: 1px solid rgb(255 255 255 / 78%);
-  border-radius: 50%;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 75%);
+  display: inline-flex;
+  width: clamp(0.26rem, 1.8cqi, 0.48rem);
+  height: clamp(0.26rem, 1.8cqi, 0.48rem);
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.26rem, 1.8cqi, 0.48rem);
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 80%));
 }
 
 .red-ownership {
-  background: var(--color-team-red);
+  color: var(--color-team-red);
 }
 
 .blue-ownership {
-  background: var(--color-team-blue);
+  color: var(--color-team-blue);
 }
 
 .outcome-marker {
   right: 0.12rem;
   top: 0.12rem;
   border-radius: 50%;
+}
+
+.configured-marker {
+  right: 0.12rem;
+  bottom: 0.12rem;
+  border-radius: 50%;
+}
+
+.ownership-marker fa-icon,
+.outcome-marker fa-icon,
+.configured-marker fa-icon,
+.move-handle fa-icon,
+.resize-handle fa-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
 }
 
 .configured-marker,
@@ -234,6 +271,10 @@
 }
 
 .move-handle {
+  position: absolute;
+  z-index: 6;
+  bottom: calc(100% + 0.35rem);
+  left: 50%;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -243,6 +284,8 @@
   border-radius: 999px;
   box-shadow: 0 0.18rem 0.65rem rgb(0 0 0 / 55%);
   cursor: grab;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 
 .move-handle:active {
@@ -251,25 +294,15 @@
 
 .resize-handle {
   position: absolute;
+  display: grid;
   width: 1.25rem;
   min-width: 1.25rem;
   height: 1.25rem;
   min-height: 1.25rem;
   border-radius: 0.2rem;
   box-shadow: 0 0.12rem 0.4rem rgb(0 0 0 / 65%);
-}
-
-.resize-handle::before,
-.resize-handle::after {
-  position: absolute;
-  width: 0.55rem;
-  height: 0.18rem;
-  background: currentColor;
-  content: '';
-}
-
-.resize-handle::after {
-  transform: rotate(90deg);
+  place-items: center;
+  line-height: 0;
 }
 
 .resize-handle.north-west {
@@ -307,7 +340,8 @@
   .cell-grid,
   .cell,
   .ownership-marker,
-  .outcome-marker {
+  .outcome-marker,
+  .configured-marker {
     border-color: CanvasText;
     forced-color-adjust: none;
   }
