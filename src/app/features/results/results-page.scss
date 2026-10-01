@@ -105,8 +105,9 @@ h2 {
   transform: rotate(3deg);
 }
 
-.winner-seal span {
-  font-family: var(--font-display);
+.winner-seal fa-icon {
+  display: grid;
+  place-items: center;
   font-size: clamp(3rem, 8vw, 6.5rem);
   line-height: 0.7;
 }
@@ -130,6 +131,16 @@ h2 {
   color: var(--color-text);
   font-size: clamp(1rem, 2vw, 1.3rem);
   font-weight: 900;
+}
+
+.result-announcement fa-icon,
+.team-score h3 fa-icon,
+.round-points fa-icon,
+.replay-action fa-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  line-height: 1;
 }
 
 .score-card,
@@ -198,12 +209,12 @@ h2 {
   text-transform: uppercase;
 }
 
-.red-score h3 span,
+.red-score h3 fa-icon,
 .red-points {
   color: var(--color-team-red);
 }
 
-.blue-score h3 span,
+.blue-score h3 fa-icon,
 .blue-points {
   color: var(--color-team-blue);
 }

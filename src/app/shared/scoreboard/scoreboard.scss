@@ -50,6 +50,19 @@
   font-size: clamp(0.75rem, 1.5vw, 1rem);
 }
 
+.team-symbol fa-icon,
+.team-state fa-icon,
+.starter fa-icon {
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.team-state fa-icon,
+.starter fa-icon {
+  width: 1em;
+}
+
 .red-score .team-symbol {
   color: var(--color-team-red);
 }

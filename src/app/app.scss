@@ -52,9 +52,10 @@
   white-space: nowrap;
 }
 
-.brand [aria-hidden='true'] {
+.brand-icon {
   color: var(--color-accent);
   font-size: 1.5em;
+  line-height: 1;
 }
 
 nav ol {
@@ -96,6 +97,12 @@ nav li.is-complete {
   border-radius: 50%;
   font-size: 0.75rem;
   font-weight: 900;
+}
+
+.stage-number fa-icon {
+  display: grid;
+  place-items: center;
+  line-height: 1;
 }
 
 nav a,

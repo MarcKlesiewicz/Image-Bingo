@@ -5,16 +5,16 @@
     [class.is-locked]="redLocked()"
     [attr.aria-label]="redName() + ', red team score and turn state'"
   >
-    <span class="team-symbol" aria-hidden="true">▲</span>
+    <span class="team-symbol" aria-hidden="true"><fa-icon [icon]="faCaretUp" /></span>
     <div class="team-copy">
       <span class="team-name" [title]="redName()">{{ redName() }}</span>
       <span class="team-state">
         @if (redLocked()) {
-          <span aria-hidden="true">✓</span>
+          <fa-icon [icon]="faCheck" aria-hidden="true" />
         } @else if (activeTeam() === 'red') {
-          <span aria-hidden="true">▶</span>
+          <fa-icon [icon]="faPlay" aria-hidden="true" />
         } @else {
-          <span aria-hidden="true">…</span>
+          <fa-icon [icon]="faEllipsis" aria-hidden="true" />
         }
         {{ teamState('red', redLocked()) }}
       </span>
@@ -25,7 +25,7 @@
   <div class="round-status">
     <span class="round-label">Round</span>
     <strong>{{ currentRound() }}<span aria-hidden="true"> / </span><span class="visually-hidden"> of </span>{{ totalRounds() }}</strong>
-    <span class="starter"><span aria-hidden="true">◆</span> {{ teamName(starter()) }} started</span>
+    <span class="starter"><fa-icon [icon]="faDiamond" aria-hidden="true" /> {{ teamName(starter()) }} started</span>
   </div>
 
   <article
@@ -34,16 +34,16 @@
     [class.is-locked]="blueLocked()"
     [attr.aria-label]="blueName() + ', blue team score and turn state'"
   >
-    <span class="team-symbol" aria-hidden="true">■</span>
+    <span class="team-symbol" aria-hidden="true"><fa-icon [icon]="faSquare" /></span>
     <div class="team-copy">
       <span class="team-name" [title]="blueName()">{{ blueName() }}</span>
       <span class="team-state">
         @if (blueLocked()) {
-          <span aria-hidden="true">✓</span>
+          <fa-icon [icon]="faCheck" aria-hidden="true" />
         } @else if (activeTeam() === 'blue') {
-          <span aria-hidden="true">▶</span>
+          <fa-icon [icon]="faPlay" aria-hidden="true" />
         } @else {
-          <span aria-hidden="true">…</span>
+          <fa-icon [icon]="faEllipsis" aria-hidden="true" />
         }
         {{ teamState('blue', blueLocked()) }}
       </span>

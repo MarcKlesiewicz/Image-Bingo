@@ -3,6 +3,7 @@ export {
   faArrowLeft,
   faArrowRight,
   faArrowUp,
+  faCaretUp,
   faCheck,
   faCircle,
   faDiamond,

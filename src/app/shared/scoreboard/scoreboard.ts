@@ -1,14 +1,30 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { Team } from '../../models/game.models';
+import {
+  faCaretUp,
+  faCheck,
+  faDiamond,
+  faEllipsis,
+  faPlay,
+  faSquare,
+} from '../icons/game-icons';
 
 @Component({
   selector: 'app-scoreboard',
+  imports: [FaIconComponent],
   templateUrl: './scoreboard.html',
   styleUrl: './scoreboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Scoreboard {
+  protected readonly faCaretUp = faCaretUp;
+  protected readonly faCheck = faCheck;
+  protected readonly faDiamond = faDiamond;
+  protected readonly faEllipsis = faEllipsis;
+  protected readonly faPlay = faPlay;
+  protected readonly faSquare = faSquare;
   readonly redScore = input.required<number>();
   readonly blueScore = input.required<number>();
   readonly redName = input.required<string>();

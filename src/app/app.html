@@ -6,7 +6,7 @@
     [routerLink]="game.authoritativeRoute()"
     [attr.aria-label]="headerTitle() + ', current game stage'"
   >
-    <span aria-hidden="true">◎</span>
+    <fa-icon class="brand-icon" [icon]="faTableCellsLarge" aria-hidden="true" />
     <span>{{ headerTitle() }}</span>
   </a>
 
@@ -15,7 +15,11 @@
       @for (item of navigation; track item.route; let stageIndex = $index) {
         <li [class.is-current]="isCurrent(item)" [class.is-complete]="isComplete(stageIndex)">
           <span class="stage-number" aria-hidden="true">
-            {{ isComplete(stageIndex) ? '✓' : stageIndex + 1 }}
+            @if (isComplete(stageIndex)) {
+              <fa-icon [icon]="faCheck" />
+            } @else {
+              {{ stageIndex + 1 }}
+            }
           </span>
           @if (isCurrent(item)) {
             <a [routerLink]="'/' + item.route" aria-current="step">

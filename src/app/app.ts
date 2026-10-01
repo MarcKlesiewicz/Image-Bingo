@@ -1,8 +1,10 @@
 import { Component, HostListener, computed, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from './core/game-state.service';
 import { GameRoute } from './models/game.models';
+import { faCheck, faTableCellsLarge } from './shared/icons/game-icons';
 
 interface NavigationItem {
   readonly label: string;
@@ -11,11 +13,13 @@ interface NavigationItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterLink, RouterOutlet],
+  imports: [FaIconComponent, RouterLink, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
+  protected readonly faCheck = faCheck;
+  protected readonly faTableCellsLarge = faTableCellsLarge;
   protected readonly game = inject(GameStateService);
   protected readonly navigation: readonly NavigationItem[] = [
     { label: 'Setup', route: 'setup' },
