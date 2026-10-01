@@ -56,6 +56,26 @@
           (input)="updateTeamName('blue', $event)"
         />
       </label>
+      <label class="guesses-field">
+        <span>Guesses per team</span>
+        <input
+          id="guesses-per-team"
+          type="number"
+          min="1"
+          max="100"
+          step="1"
+          required
+          inputmode="numeric"
+          [value]="game.guessesPerTeam()"
+          [attr.aria-invalid]="guessError() ? 'true' : 'false'"
+          [attr.aria-describedby]="guessError() ? 'guesses-help guesses-error' : 'guesses-help'"
+          (input)="updateGuessesPerTeam($event)"
+        />
+        <small id="guesses-help">Applies to each team in every round.</small>
+        @if (guessError()) {
+          <small id="guesses-error" class="field-error">{{ guessError() }}</small>
+        }
+      </label>
     </div>
   </section>
 
@@ -126,9 +146,20 @@
       </div>
 
       @if (hasDeck()) {
-        <ol class="deck-list">
+        <p id="deck-order-instructions" class="visually-hidden">
+          Focus an image and press Arrow up or Arrow down to change its round position.
+        </p>
+        <ol class="deck-list" aria-describedby="deck-order-instructions">
           @for (image of game.deck(); track image.id; let index = $index) {
-            <li [class.is-active]="activeIndex() === index">
+            <li
+              #deckRow
+              tabindex="0"
+              [attr.data-image-id]="image.id"
+              [class.is-active]="activeIndex() === index"
+              [attr.aria-label]="image.name + ', round ' + (index + 1) + ' of ' + deckCount()"
+              aria-keyshortcuts="ArrowUp ArrowDown"
+              (keydown)="handleDeckRowKeydown($event, image.id, image.name)"
+            >
               <div class="round-number" aria-hidden="true">{{ index + 1 }}</div>
               <div class="deck-item-copy">
                 <span class="filename" [title]="image.name">{{ image.name }}</span>
@@ -144,6 +175,26 @@
               <div class="deck-item-actions">
                 <button
                   type="button"
+                  class="icon-button reorder-button"
+                  data-move-direction="earlier"
+                  [disabled]="game.importPending() || index === 0"
+                  [attr.aria-label]="'Move ' + image.name + ' one position earlier'"
+                  (click)="moveImage(image.id, image.name, 'earlier')"
+                >
+                  <fa-icon [icon]="arrowUpIcon" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  class="icon-button reorder-button"
+                  data-move-direction="later"
+                  [disabled]="game.importPending() || index === deckCount() - 1"
+                  [attr.aria-label]="'Move ' + image.name + ' one position later'"
+                  (click)="moveImage(image.id, image.name, 'later')"
+                >
+                  <fa-icon [icon]="arrowDownIcon" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
                   class="secondary-button small-button"
                   [attr.aria-current]="activeIndex() === index ? 'true' : null"
                   (click)="selectImage(index, true)"
@@ -157,7 +208,7 @@
                   [attr.aria-label]="'Remove ' + image.name + ' from the deck'"
                   (click)="removeImage(image.id, image.name)"
                 >
-                  <span aria-hidden="true">×</span>
+                  <fa-icon [icon]="trashIcon" aria-hidden="true" />
                 </button>
               </div>
             </li>
@@ -165,7 +216,7 @@
         </ol>
       } @else {
         <div class="empty-state">
-          <span aria-hidden="true">▧</span>
+          <fa-icon [icon]="tableCellsIcon" aria-hidden="true" />
           <h3>Your deck is empty</h3>
           <p>Use the image picker above. The first accepted image opens here automatically.</p>
         </div>
@@ -204,7 +255,8 @@
               [disabled]="!hasPrevious()"
               (click)="moveConfiguration(-1)"
             >
-              <span aria-hidden="true">←</span> Previous
+              <fa-icon [icon]="arrowLeftIcon" aria-hidden="true" />
+              Previous
             </button>
             <button
               type="button"
@@ -212,7 +264,8 @@
               [disabled]="!hasNext()"
               (click)="moveConfiguration(1)"
             >
-              Next <span aria-hidden="true">→</span>
+              Next
+              <fa-icon [icon]="arrowRightIcon" aria-hidden="true" />
             </button>
           </nav>
         </div>
@@ -265,7 +318,10 @@
                 (click)="selectImage(game.deck().indexOf(image), true)"
               >
                 <span>{{ image.name }}</span>
-                <span aria-hidden="true">Configure →</span>
+                <span>
+                  Configure
+                  <fa-icon [icon]="arrowRightIcon" aria-hidden="true" />
+                </span>
               </button>
             </li>
           }
@@ -283,7 +339,20 @@
       (click)="startGame()"
     >
       <span>Start game</span>
-      <span aria-hidden="true">Round 1 →</span>
+      <span aria-hidden="true">
+        Presentation
+        <fa-icon [icon]="playIcon" />
+      </span>
     </button>
   </section>
+
+  <p
+    id="deck-order-status"
+    class="visually-hidden"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    {{ reorderStatus() }}
+  </p>
 </article>

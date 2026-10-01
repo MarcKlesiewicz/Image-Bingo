@@ -9,6 +9,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from '../../core/game-state.service';
 import {
@@ -20,13 +21,22 @@ import {
   Team,
 } from '../../models/game.models';
 import {
+  faArrowDown,
+  faArrowLeft,
+  faArrowRight,
+  faArrowUp,
+  faPlay,
+  faTableCellsLarge,
+  faTrashCan,
+} from '../../shared/icons/game-icons';
+import {
   ImageGrid,
   ImageGridCellView,
 } from '../../shared/image-grid/image-grid';
 
 @Component({
   selector: 'app-setup-page',
-  imports: [ImageGrid],
+  imports: [FaIconComponent, ImageGrid],
   templateUrl: './setup-page.html',
   styleUrl: './setup-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,7 +50,18 @@ export class SetupPage {
     viewChild<ElementRef<HTMLHeadingElement>>('configurationHeading');
   private readonly incompleteButtons =
     viewChildren<ElementRef<HTMLButtonElement>>('incompleteButton');
-  private readonly setupNotice = signal('');
+  private readonly deckRows = viewChildren<ElementRef<HTMLElement>>('deckRow');
+  protected readonly setupNotice = signal('');
+  protected readonly reorderStatus = signal('');
+  protected readonly guessError = signal('');
+
+  protected readonly arrowDownIcon = faArrowDown;
+  protected readonly arrowLeftIcon = faArrowLeft;
+  protected readonly arrowRightIcon = faArrowRight;
+  protected readonly arrowUpIcon = faArrowUp;
+  protected readonly playIcon = faPlay;
+  protected readonly tableCellsIcon = faTableCellsLarge;
+  protected readonly trashIcon = faTrashCan;
 
   protected readonly maxGameNameLength = MAX_GAME_NAME_LENGTH;
   protected readonly maxTeamNameLength = MAX_TEAM_NAME_LENGTH;
@@ -90,7 +111,7 @@ export class SetupPage {
         incomplete === 1 ? 'image' : 'images'
       }.`;
     }
-    return 'The deck is ready. Start game opens round 1.';
+    return 'The deck is ready. Start game opens the presentation screen.';
   });
   protected readonly importStatus = computed(() => {
     if (this.game.importPending()) {
@@ -125,6 +146,63 @@ export class SetupPage {
 
   protected updateTeamName(team: Team, event: Event): void {
     this.game.setTeamName(team, (event.currentTarget as HTMLInputElement).value);
+  }
+
+  protected updateGuessesPerTeam(event: Event): void {
+    const input = event.currentTarget as HTMLInputElement;
+    const value = Number(input.value);
+    if (
+      input.value.trim() === '' ||
+      !/^\d+$/.test(input.value) ||
+      !Number.isInteger(value) ||
+      value < 1 ||
+      value > 100
+    ) {
+      this.guessError.set('Enter a whole number from 1 to 100.');
+      return;
+    }
+
+    this.guessError.set('');
+    this.game.setGuessesPerTeam(value);
+  }
+
+  protected handleDeckRowKeydown(
+    event: KeyboardEvent,
+    imageId: string,
+    imageName: string,
+  ): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.moveImage(imageId, imageName, 'earlier');
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.moveImage(imageId, imageName, 'later');
+    }
+  }
+
+  protected moveImage(
+    imageId: string,
+    imageName: string,
+    direction: 'earlier' | 'later',
+  ): void {
+    const previousIndex = this.game.deck().findIndex((image) => image.id === imageId);
+    this.game.moveImage(imageId, direction);
+    const nextIndex = this.game.deck().findIndex((image) => image.id === imageId);
+    if (previousIndex === nextIndex || nextIndex < 0) {
+      return;
+    }
+
+    this.reorderStatus.set(
+      `${imageName} moved to round ${nextIndex + 1} of ${this.deckCount()}.`,
+    );
+    queueMicrotask(() => {
+      this.deckRows()
+        .find((row) => row.nativeElement.dataset['imageId'] === imageId)
+        ?.nativeElement.focus();
+    });
   }
 
   protected selectImage(index: number, focusHeading = false): void {
