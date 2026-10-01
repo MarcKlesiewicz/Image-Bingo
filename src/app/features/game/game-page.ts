@@ -213,7 +213,7 @@ export class GamePage implements AfterViewInit, OnDestroy {
     const guessLimit = this.game.guessesPerTeam();
     const limitMessage =
       after === guessLimit
-        ? ` ${this.guessCountLabel(guessLimit, true)} selected. Other cells are unavailable until one is deselected or the turn is locked.`
+        ? ` ${this.guessCountLabel(guessLimit)} selected. Other cells are unavailable until one is deselected or the turn is locked.`
         : '';
     this.announcement.set(
       `${this.teamLabel(team)} selected cell ${cell}. ${after} of ${guessLimit} ${this.guessNoun(guessLimit)} selected.${limitMessage}`,
@@ -397,9 +397,8 @@ export class GamePage implements AfterViewInit, OnDestroy {
     return count === 1 ? 'guess' : 'guesses';
   }
 
-  private guessCountLabel(count: number, sentenceStart = false): string {
-    const label = `${count} ${this.guessNoun(count)}`;
-    return sentenceStart ? `${label.charAt(0).toUpperCase()}${label.slice(1)}` : label;
+  private guessCountLabel(count: number): string {
+    return `${count} ${this.guessNoun(count)}`;
   }
 
   private clearRevealTimer(): void {

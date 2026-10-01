@@ -26,7 +26,6 @@ import {
 } from '../models/game.models';
 
 const FIRST_CELL = 1;
-const LAST_CELL = 100;
 const DEFAULT_GAME_NAME = 'Image Bingo';
 const DEFAULT_TEAM_NAMES: TeamNames = {
   red: 'Red',
@@ -366,10 +365,13 @@ export class GameStateService implements OnDestroy {
     this.writableState.set({ ...state, configurationIndex: index });
   }
 
-  moveImage(imageId: string, direction: 'earlier' | 'later'): void {
+  moveImage(
+    imageId: string,
+    direction: 'earlier' | 'later',
+  ): number | null {
     const state = this.state();
     if (state.phase !== 'setup') {
-      return;
+      return null;
     }
 
     const imageIndex = state.deck.findIndex((image) => image.id === imageId);
@@ -379,20 +381,19 @@ export class GameStateService implements OnDestroy {
       targetIndex < 0 ||
       targetIndex >= state.deck.length
     ) {
-      return;
+      return null;
     }
 
-    const configuredImage =
-      state.configurationIndex === null
-        ? null
-        : (state.deck[state.configurationIndex] ?? null);
     const deck = [...state.deck];
     [deck[imageIndex], deck[targetIndex]] = [deck[targetIndex], deck[imageIndex]];
-    const configurationIndex =
-      configuredImage === null
-        ? null
-        : deck.findIndex((image) => image.id === configuredImage.id);
+    let configurationIndex = state.configurationIndex;
+    if (configurationIndex === imageIndex) {
+      configurationIndex = targetIndex;
+    } else if (configurationIndex === targetIndex) {
+      configurationIndex = imageIndex;
+    }
     this.writableState.set({ ...state, deck, configurationIndex });
+    return targetIndex;
   }
 
   toggleCorrectCell(imageId: string, cell: CellNumber): void {
@@ -759,7 +760,7 @@ function toggleCell(
 }
 
 function isCellNumber(cell: number): boolean {
-  return Number.isInteger(cell) && cell >= FIRST_CELL && cell <= LAST_CELL;
+  return Number.isInteger(cell) && cell >= FIRST_CELL && cell <= CELL_COUNT;
 }
 
 function starterForIndex(index: number): Team {

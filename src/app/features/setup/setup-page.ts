@@ -13,6 +13,7 @@ import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from '../../core/game-state.service';
 import {
+  CELL_COUNT,
   CELL_NUMBERS,
   CellNumber,
   GridPlacement,
@@ -65,6 +66,7 @@ export class SetupPage {
 
   protected readonly maxGameNameLength = MAX_GAME_NAME_LENGTH;
   protected readonly maxTeamNameLength = MAX_TEAM_NAME_LENGTH;
+  protected readonly maxGuessesPerTeam = CELL_COUNT;
   protected readonly deckCount = computed(() => this.game.deck().length);
   protected readonly hasDeck = computed(() => this.deckCount() > 0);
   protected readonly activeIndex = computed(() => this.game.configurationIndex());
@@ -156,9 +158,11 @@ export class SetupPage {
       !/^\d+$/.test(input.value) ||
       !Number.isInteger(value) ||
       value < 1 ||
-      value > 100
+      value > this.maxGuessesPerTeam
     ) {
-      this.guessError.set('Enter a whole number from 1 to 100.');
+      this.guessError.set(
+        `Enter a whole number from 1 to ${this.maxGuessesPerTeam}.`,
+      );
       return;
     }
 
@@ -188,10 +192,8 @@ export class SetupPage {
     imageName: string,
     direction: 'earlier' | 'later',
   ): void {
-    const previousIndex = this.game.deck().findIndex((image) => image.id === imageId);
-    this.game.moveImage(imageId, direction);
-    const nextIndex = this.game.deck().findIndex((image) => image.id === imageId);
-    if (previousIndex === nextIndex || nextIndex < 0) {
+    const nextIndex = this.game.moveImage(imageId, direction);
+    if (nextIndex === null) {
       return;
     }
 
@@ -199,9 +201,7 @@ export class SetupPage {
       `${imageName} moved to round ${nextIndex + 1} of ${this.deckCount()}.`,
     );
     queueMicrotask(() => {
-      this.deckRows()
-        .find((row) => row.nativeElement.dataset['imageId'] === imageId)
-        ?.nativeElement.focus();
+      this.deckRows().at(nextIndex)?.nativeElement.focus();
     });
   }
 

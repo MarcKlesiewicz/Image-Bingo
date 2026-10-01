@@ -9,7 +9,6 @@ export {
   faDiamond,
   faEllipsis,
   faEquals,
-  faLock,
   faPlay,
   faPlus,
   faRotateLeft,
