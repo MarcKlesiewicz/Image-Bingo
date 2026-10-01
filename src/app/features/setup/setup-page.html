@@ -298,8 +298,8 @@
         <p class="step-label">Step 5</p>
         <h2 id="readiness-heading">Ready for round one?</h2>
       </div>
-      <span class="readiness-state" [class.is-ready]="game.canStart()">
-        {{ game.canStart() ? 'Deck ready' : 'Setup incomplete' }}
+      <span class="readiness-state" [class.is-ready]="setupReady()">
+        {{ setupReady() ? 'Deck ready' : 'Setup incomplete' }}
       </span>
     </div>
 
@@ -332,8 +332,8 @@
     <button
       type="button"
       class="start-button"
-      [class.is-aria-disabled]="!game.canStart()"
-      [attr.aria-disabled]="!game.canStart()"
+      [class.is-aria-disabled]="!setupReady()"
+      [attr.aria-disabled]="!setupReady()"
       aria-describedby="start-guidance"
       [disabled]="game.importPending()"
       (click)="startGame()"

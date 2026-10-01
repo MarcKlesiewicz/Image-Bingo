@@ -107,7 +107,7 @@ describe('GamePage', () => {
     );
   });
 
-  it('counts down 3, 2, 1 and reveals only when zero is reached', async () => {
+  it('counts down 3, 2, 1, 0 and reveals after zero is shown', async () => {
     vi.useFakeTimers();
     setState(game, readyState());
     const reveal = vi.spyOn(game, 'reveal');
@@ -130,9 +130,18 @@ describe('GamePage', () => {
     expect(button.textContent?.trim()).toBe('1');
     expect(reveal).not.toHaveBeenCalled();
 
-    await vi.advanceTimersByTimeAsync(999);
+    vi.advanceTimersByTime(999);
     expect(reveal).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1);
+    vi.advanceTimersByTime(1);
+    fixture.detectChanges();
+
+    expect(button.textContent?.trim()).toBe('0');
+    expect(button.disabled).toBe(true);
+    expect(game.phase()).toBe('ready-to-reveal');
+    expect(game.completedRounds()).toHaveLength(0);
+    expect(reveal).not.toHaveBeenCalled();
+
+    await vi.advanceTimersToNextTimerAsync();
     fixture.detectChanges();
 
     expect(reveal).toHaveBeenCalledTimes(1);
@@ -153,9 +162,28 @@ describe('GamePage', () => {
     const button = revealButton();
     button.click();
     button.click();
-    await vi.advanceTimersByTimeAsync(3_000);
+    vi.advanceTimersByTime(3_000);
+    await vi.advanceTimersToNextTimerAsync();
 
     expect(reveal).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels the pending reveal frame when the game is no longer revealable', async () => {
+    vi.useFakeTimers();
+    setState(game, readyState());
+    const reveal = vi.spyOn(game, 'reveal');
+    render();
+
+    revealButton().click();
+    vi.advanceTimersByTime(3_000);
+    fixture.detectChanges();
+    expect(revealButton().textContent?.trim()).toBe('0');
+
+    setState(game, presentationState());
+    await vi.advanceTimersToNextTimerAsync();
+
+    expect(reveal).not.toHaveBeenCalled();
+    expect(game.phase()).toBe('presentation');
   });
 
   it('cancels a pending reveal when the page is destroyed', async () => {
@@ -165,8 +193,9 @@ describe('GamePage', () => {
     render();
 
     revealButton().click();
+    vi.advanceTimersByTime(3_000);
     fixture.destroy();
-    await vi.advanceTimersByTimeAsync(3_000);
+    await vi.runOnlyPendingTimersAsync();
 
     expect(reveal).not.toHaveBeenCalled();
     expect(game.phase()).toBe('ready-to-reveal');

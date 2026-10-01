@@ -123,6 +123,61 @@ describe('SetupPage', () => {
     },
   );
 
+  it.each(['', '0', '101', '2.5'])(
+    'blocks starting with invalid guess input %j even when the deck is complete',
+    (value) => {
+      seedDeck(game, [image('first')]);
+      createFixture();
+      const router = TestBed.inject(Router) as unknown as {
+        navigate: ReturnType<typeof vi.fn>;
+      };
+
+      const input = guessesInput();
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+
+      expect(game.canStart()).toBe(true);
+      expect(readinessState().textContent).toContain('Setup incomplete');
+      expect(startButton().getAttribute('aria-disabled')).toBe('true');
+      expect(startGuidance()).toContain('Enter a whole number from 1 to 100.');
+
+      startButton().click();
+      fixture.detectChanges();
+
+      expect(game.phase()).toBe('setup');
+      expect(router.navigate).not.toHaveBeenCalled();
+    },
+  );
+
+  it('restores setup readiness and starts after invalid guess input is corrected', () => {
+    seedDeck(game, [image('first')]);
+    createFixture();
+    const router = TestBed.inject(Router) as unknown as {
+      navigate: ReturnType<typeof vi.fn>;
+    };
+    const input = guessesInput();
+
+    input.value = '2.5';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(startButton().getAttribute('aria-disabled')).toBe('true');
+
+    input.value = '3';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(game.guessesPerTeam()).toBe(3);
+    expect(readinessState().textContent).toContain('Deck ready');
+    expect(startButton().getAttribute('aria-disabled')).toBe('false');
+    expect(startGuidance()).toContain('The deck is ready');
+
+    startButton().click();
+
+    expect(game.phase()).toBe('presentation');
+    expect(router.navigate).toHaveBeenCalledWith(['/play']);
+  });
+
   it('uses Font Awesome icons without exposing icon glyphs as button names', () => {
     seedDeck(game, [image('first'), image('last')]);
     createFixture();
@@ -154,6 +209,18 @@ describe('SetupPage', () => {
 
   function guessesInput(): HTMLInputElement {
     return fixture.nativeElement.querySelector('#guesses-per-team')!;
+  }
+
+  function readinessState(): HTMLElement {
+    return fixture.nativeElement.querySelector('.readiness-state')!;
+  }
+
+  function startButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('.start-button')!;
+  }
+
+  function startGuidance(): string {
+    return fixture.nativeElement.querySelector('#start-guidance').textContent.trim();
   }
 
   function liveReorderStatus(): string {

@@ -66,6 +66,7 @@ export class GamePage implements AfterViewInit, OnDestroy {
   private readonly announcement = signal('');
   private readonly revealCountdown = signal<number | null>(null);
   private revealTimer: ReturnType<typeof setInterval> | null = null;
+  private cancelRevealCompletion: (() => void) | null = null;
 
   protected readonly liveAnnouncement = this.announcement.asReadonly();
   protected readonly arrowRightIcon = faArrowRight;
@@ -125,6 +126,7 @@ export class GamePage implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearRevealTimer();
+    this.clearRevealCompletion();
   }
 
   protected beginGame(): void {
@@ -258,14 +260,33 @@ export class GamePage implements AfterViewInit, OnDestroy {
 
       const next = (this.revealCountdown() ?? 1) - 1;
       this.revealCountdown.set(next);
-      if (next > 0) {
-        this.announcement.set(`Reveal in ${next}.`);
+      this.announcement.set(`Reveal in ${next}.`);
+      if (next === 0) {
+        this.clearRevealTimer();
+        this.scheduleRevealCompletion();
+      }
+    }, 1_000);
+  }
+
+  private scheduleRevealCompletion(): void {
+    const complete = () => {
+      this.cancelRevealCompletion = null;
+      if (!this.game.canReveal()) {
+        this.revealCountdown.set(null);
         return;
       }
-
-      this.clearRevealTimer();
       this.completeReveal();
-    }, 1_000);
+    };
+
+    if (typeof globalThis.requestAnimationFrame === 'function') {
+      const frame = globalThis.requestAnimationFrame(complete);
+      this.cancelRevealCompletion = () =>
+        globalThis.cancelAnimationFrame?.(frame);
+      return;
+    }
+
+    const timer = setTimeout(complete, 0);
+    this.cancelRevealCompletion = () => clearTimeout(timer);
   }
 
   private completeReveal(): void {
@@ -407,6 +428,11 @@ export class GamePage implements AfterViewInit, OnDestroy {
     }
     clearInterval(this.revealTimer);
     this.revealTimer = null;
+  }
+
+  private clearRevealCompletion(): void {
+    this.cancelRevealCompletion?.();
+    this.cancelRevealCompletion = null;
   }
 
   private scheduleFocus(action: () => void): void {

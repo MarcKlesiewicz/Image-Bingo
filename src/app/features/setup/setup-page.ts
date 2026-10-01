@@ -55,6 +55,9 @@ export class SetupPage {
   protected readonly setupNotice = signal('');
   protected readonly reorderStatus = signal('');
   protected readonly guessError = signal('');
+  protected readonly setupReady = computed(
+    () => this.game.canStart() && !this.guessError(),
+  );
 
   protected readonly arrowDownIcon = faArrowDown;
   protected readonly arrowLeftIcon = faArrowLeft;
@@ -103,6 +106,9 @@ export class SetupPage {
   protected readonly startGuidance = computed(() => {
     if (this.game.importPending()) {
       return 'Wait while the selected images are checked.';
+    }
+    if (this.guessError()) {
+      return this.guessError();
     }
     if (!this.hasDeck()) {
       return 'Add at least one image to start the game.';
@@ -258,7 +264,7 @@ export class SetupPage {
 
   protected startGame(): void {
     this.setupNotice.set('');
-    if (!this.game.canStart()) {
+    if (!this.setupReady()) {
       this.setupNotice.set(this.startGuidance());
       const firstIncomplete = this.incompleteButtons().at(0)?.nativeElement;
       if (firstIncomplete !== undefined) {
