@@ -100,9 +100,7 @@ describe('SetupPage', () => {
     expect(input.getAttribute('max')).toBe('100');
     expect(input.getAttribute('step')).toBe('1');
     expect(input.getAttribute('aria-invalid')).toBe('false');
-    expect(fixture.nativeElement.querySelector('#guesses-help').textContent).toContain(
-      'each team in every round',
-    );
+    expect(input.getAttribute('aria-describedby')).toBeNull();
   });
 
   it.each(['', '0', '101', '2.5'])(
@@ -117,6 +115,7 @@ describe('SetupPage', () => {
 
       expect(game.guessesPerTeam()).toBe(2);
       expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(input.getAttribute('aria-describedby')).toBe('guesses-error');
       expect(fixture.nativeElement.querySelector('#guesses-error').textContent).toContain(
         'whole number from 1 to 100',
       );

@@ -107,7 +107,7 @@ describe('ImageGrid', () => {
     expect(emitted[0]?.size).toBe(placement.size);
   });
 
-  it('renders centered Font Awesome controls and independently sized markers', () => {
+  it('uses distinct border states for revealed outcomes without outcome markers', () => {
     const element = render({
       mode: 'revealed',
       cells: createCells({
@@ -117,17 +117,14 @@ describe('ImageGrid', () => {
       }),
     });
     const sharedOwnership = element.querySelector('.cell.is-shared .ownership-marker');
-    const missMarker = element.querySelector('.miss-marker');
-
     expect(sharedOwnership?.querySelectorAll('.ownership-dot')).toHaveLength(2);
-    expect(sharedOwnership?.classList).not.toContain('outcome-marker');
-    expect(missMarker?.querySelector('fa-icon')).not.toBeNull();
-    expect(element.querySelector('.hit-marker fa-icon')).not.toBeNull();
-    expect(element.querySelector('.correct-marker fa-icon')).not.toBeNull();
-    expect(missMarker?.textContent?.trim()).toBe('');
+    expect(element.querySelectorAll('.cell.is-correct')).toHaveLength(1);
+    expect(element.querySelectorAll('.cell.is-hit')).toHaveLength(1);
+    expect(element.querySelectorAll('.cell.is-miss')).toHaveLength(1);
+    expect(element.querySelector('.outcome-marker')).toBeNull();
   });
 
-  it('uses a Font Awesome plus inside every accessible resize handle', () => {
+  it('uses a Font Awesome plus inside every accessible resize handle without a configured marker', () => {
     const element = render({
       cells: createCells({ 1: { selected: true } }),
     });
@@ -139,6 +136,6 @@ describe('ImageGrid', () => {
     expect(handles.every((handle) => handle.querySelector('fa-icon'))).toBe(true);
     expect(handles.every((handle) => handle.getAttribute('aria-label')?.includes('Resize')))
       .toBe(true);
-    expect(element.querySelector('.configured-marker fa-icon')).not.toBeNull();
+    expect(element.querySelector('.configured-marker')).toBeNull();
   });
 });

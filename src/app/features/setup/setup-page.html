@@ -1,137 +1,151 @@
 <article class="setup-page" aria-labelledby="setup-heading">
-  <header class="hero">
-    <div>
-      <p class="eyebrow">Host controls · Build the deck</p>
+  <header class="setup-header">
+    <div class="setup-title">
+      <p class="eyebrow">Game setup</p>
       <h1 id="setup-heading">Set up image bingo</h1>
       <p class="hero-copy">
-        Add local images, mark every winning area, then hand the finished deck to round one.
-        Nothing leaves this browser session.
+        Name the teams, build the deck, and mark the cells that score.
       </p>
     </div>
 
-    <div class="deck-meter" aria-label="Deck progress">
-      <strong>{{ deckCount() }}</strong>
-      <span>{{ deckCount() === 1 ? 'image in deck' : 'images in deck' }}</span>
-      <span>{{ game.incompleteImages().length }} still incomplete</span>
+    <div class="setup-summary" aria-label="Deck progress">
+      <span class="summary-item">
+        <strong>{{ deckCount() }}</strong>
+        <span>{{ deckCount() === 1 ? 'image' : 'images' }}</span>
+      </span>
+      <span class="summary-divider" aria-hidden="true"></span>
+      <span class="summary-item">
+        <strong>{{ game.incompleteImages().length }}</strong>
+        <span>incomplete</span>
+      </span>
     </div>
   </header>
 
-  <section class="names-panel panel" aria-labelledby="names-heading">
-    <div class="section-heading">
-      <div>
-        <p class="step-label">Step 1</p>
-        <h2 id="names-heading">Name the game</h2>
+  <div class="setup-basics">
+    <section class="names-panel panel" aria-labelledby="names-heading">
+      <div class="section-heading">
+        <div class="step-heading">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div>
+            <h2 id="names-heading">Set game details</h2>
+            <p>Choose the game name, team names, and guesses allowed per round.</p>
+          </div>
+        </div>
       </div>
-      <p>These names appear in the game header, scoreboard, and results.</p>
-    </div>
 
-    <div class="name-fields">
-      <label>
-        <span>Game name</span>
-        <input
-          type="text"
-          [maxLength]="maxGameNameLength"
-          autocomplete="off"
-          [value]="game.configuredGameName()"
-          (input)="updateGameName($event)"
-        />
-      </label>
-      <label class="red-name-field">
-        <span>Red team name</span>
-        <input
-          type="text"
-          [maxLength]="maxTeamNameLength"
-          autocomplete="off"
-          [value]="game.configuredTeamNames().red"
-          (input)="updateTeamName('red', $event)"
-        />
-      </label>
-      <label class="blue-name-field">
-        <span>Blue team name</span>
-        <input
-          type="text"
-          [maxLength]="maxTeamNameLength"
-          autocomplete="off"
-          [value]="game.configuredTeamNames().blue"
-          (input)="updateTeamName('blue', $event)"
-        />
-      </label>
-      <label class="guesses-field">
-        <span>Guesses per team</span>
-        <input
-          id="guesses-per-team"
-          type="number"
-          min="1"
-          [max]="maxGuessesPerTeam"
-          step="1"
-          required
-          inputmode="numeric"
-          [value]="game.guessesPerTeam()"
-          [attr.aria-invalid]="guessError() ? 'true' : 'false'"
-          [attr.aria-describedby]="guessError() ? 'guesses-help guesses-error' : 'guesses-help'"
-          (input)="updateGuessesPerTeam($event)"
-        />
-        <small id="guesses-help">Applies to each team in every round.</small>
-        @if (guessError()) {
-          <small id="guesses-error" class="field-error">{{ guessError() }}</small>
-        }
-      </label>
-    </div>
-  </section>
-
-  <section
-    class="import-panel panel"
-    aria-labelledby="import-heading"
-    [attr.aria-busy]="game.importPending()"
-  >
-    <div class="section-heading">
-      <div>
-        <p class="step-label">Step 2</p>
-        <h2 id="import-heading">Add image files</h2>
-      </div>
-      <p>Choose one or many files. New batches are appended in selection order.</p>
-    </div>
-
-    <label class="file-picker" [class.is-disabled]="game.importPending()">
-      <span class="file-picker-title">
-        {{ game.importPending() ? 'Checking images…' : 'Choose images' }}
-      </span>
-      <span>PNG, JPEG, GIF, WebP, or another browser-supported image format</span>
-      <input
-        #fileInput
-        type="file"
-        accept="image/*"
-        multiple
-        [disabled]="game.importPending()"
-        (change)="importFiles($event)"
-      />
-    </label>
-
-    <p class="live-status" role="status" aria-live="polite" aria-atomic="true">
-      {{ importStatus() }}
-    </p>
-
-    @if (game.importErrors().length > 0) {
-      <div class="import-errors" aria-labelledby="rejected-heading">
-        <h3 id="rejected-heading">Files not added</h3>
-        <ul>
-          @for (error of game.importErrors(); track $index) {
-            <li>
-              <strong>{{ error.fileName }}</strong>
-              <span>{{ error.message }}</span>
-            </li>
+      <div class="name-fields">
+        <label>
+          <span>Game name</span>
+          <input
+            type="text"
+            [maxLength]="maxGameNameLength"
+            autocomplete="off"
+            [value]="game.configuredGameName()"
+            (input)="updateGameName($event)"
+          />
+        </label>
+        <label class="guesses-field">
+          <span>Guesses per team</span>
+          <input
+            id="guesses-per-team"
+            type="number"
+            min="1"
+            [max]="maxGuessesPerTeam"
+            step="1"
+            required
+            inputmode="numeric"
+            [value]="game.guessesPerTeam()"
+            [attr.aria-invalid]="guessError() ? 'true' : 'false'"
+            [attr.aria-describedby]="guessError() ? 'guesses-error' : null"
+            (input)="updateGuessesPerTeam($event)"
+          />
+          @if (guessError()) {
+            <small id="guesses-error" class="field-error">{{ guessError() }}</small>
           }
-        </ul>
+        </label>
+        <label class="red-name-field">
+          <span>Red team name</span>
+          <input
+            type="text"
+            [maxLength]="maxTeamNameLength"
+            autocomplete="off"
+            [value]="game.configuredTeamNames().red"
+            (input)="updateTeamName('red', $event)"
+          />
+        </label>
+        <label class="blue-name-field">
+          <span>Blue team name</span>
+          <input
+            type="text"
+            [maxLength]="maxTeamNameLength"
+            autocomplete="off"
+            [value]="game.configuredTeamNames().blue"
+            (input)="updateTeamName('blue', $event)"
+          />
+        </label>
+
       </div>
-    }
-  </section>
+    </section>
+
+    <section
+      class="import-panel panel"
+      aria-labelledby="import-heading"
+      [attr.aria-busy]="game.importPending()"
+    >
+      <div class="section-heading">
+        <div class="step-heading">
+          <span class="step-number" aria-hidden="true">2</span>
+          <div>
+            <h2 id="import-heading">Add image files</h2>
+            <p>New batches are appended in selection order.</p>
+          </div>
+        </div>
+      </div>
+
+      <label class="file-picker" [class.is-disabled]="game.importPending()">
+        <span class="file-picker-title">
+          {{ game.importPending() ? 'Checking images…' : 'Choose images' }}
+        </span>
+        <span>PNG, JPEG, GIF, WebP, or another browser-supported image format</span>
+        <input
+          #fileInput
+          type="file"
+          accept="image/*"
+          multiple
+          [disabled]="game.importPending()"
+          (change)="importFiles($event)"
+        />
+      </label>
+
+      <p class="live-status" role="status" aria-live="polite" aria-atomic="true">
+        {{ importStatus() }}
+      </p>
+
+      @if (game.importErrors().length > 0) {
+        <div class="import-errors" aria-labelledby="rejected-heading">
+          <h3 id="rejected-heading">Files not added</h3>
+          <ul>
+            @for (error of game.importErrors(); track $index) {
+              <li>
+                <strong>{{ error.fileName }}</strong>
+                <span>{{ error.message }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </section>
+  </div>
 
   <div class="setup-workspace">
     <aside class="deck-panel panel" aria-labelledby="deck-heading">
       <div class="section-heading compact">
-        <div>
-          <p class="step-label">Step 3</p>
-          <h2 id="deck-heading">Review the deck</h2>
+        <div class="step-heading">
+          <span class="step-number" aria-hidden="true">3</span>
+          <div>
+            <h2 id="deck-heading">Review the deck</h2>
+            <p>Round order and image status.</p>
+          </div>
         </div>
         @if (hasDeck()) {
           <button
@@ -163,14 +177,16 @@
               <div class="round-number" aria-hidden="true">{{ index + 1 }}</div>
               <div class="deck-item-copy">
                 <span class="filename" [title]="image.name">{{ image.name }}</span>
-                <span class="item-meta">
-                  Round {{ index + 1 }} · {{ correctCellLabel(image.correctCells.length) }}
+                <span class="item-details">
+                  <span class="item-meta">
+                    Round {{ index + 1 }} · {{ correctCellLabel(image.correctCells.length) }}
+                  </span>
+                  @if (activeIndex() === index) {
+                    <span class="active-indicator">Configuring</span>
+                  } @else if (image.correctCells.length === 0) {
+                    <span class="incomplete-indicator">Needs selection</span>
+                  }
                 </span>
-                @if (activeIndex() === index) {
-                  <span class="active-indicator">Currently configuring</span>
-                } @else if (image.correctCells.length === 0) {
-                  <span class="incomplete-indicator">Needs a correct cell</span>
-                }
               </div>
               <div class="deck-item-actions">
                 <button
@@ -225,11 +241,14 @@
 
     <section class="configuration-panel panel" aria-labelledby="configuration-heading">
       <div class="section-heading configuration-heading">
-        <div>
-          <p class="step-label">Step 4</p>
-          <h2 id="configuration-heading" #configurationHeading tabindex="-1">
-            Mark correct cells
-          </h2>
+        <div class="step-heading">
+          <span class="step-number" aria-hidden="true">4</span>
+          <div>
+            <h2 id="configuration-heading" #configurationHeading tabindex="-1">
+              Mark correct cells
+            </h2>
+            <p>Select every area that should score.</p>
+          </div>
         </div>
         @if (game.configurationImage(); as image) {
           <div class="position-badge">
@@ -293,17 +312,18 @@
   </div>
 
   <section class="readiness-panel panel" aria-labelledby="readiness-heading">
-    <div class="section-heading compact">
-      <div>
-        <p class="step-label">Step 5</p>
-        <h2 id="readiness-heading">Ready for round one?</h2>
+    <div class="readiness-copy">
+      <div class="step-heading">
+        <span class="step-number" aria-hidden="true">5</span>
+        <div>
+          <h2 id="readiness-heading">Ready for round one?</h2>
+          <p id="start-guidance">{{ startGuidance() }}</p>
+        </div>
       </div>
       <span class="readiness-state" [class.is-ready]="setupReady()">
         {{ setupReady() ? 'Deck ready' : 'Setup incomplete' }}
       </span>
     </div>
-
-    <p id="start-guidance">{{ startGuidance() }}</p>
 
     @if (game.incompleteImages().length > 0) {
       <div class="incomplete-summary" aria-labelledby="incomplete-heading">
@@ -339,10 +359,7 @@
       (click)="startGame()"
     >
       <span>Start game</span>
-      <span aria-hidden="true">
-        Presentation
-        <fa-icon [icon]="playIcon" />
-      </span>
+      <fa-icon [icon]="playIcon" aria-hidden="true" />
     </button>
   </section>
 

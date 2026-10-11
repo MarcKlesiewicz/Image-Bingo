@@ -73,6 +73,11 @@
                 [selected]="isSelected(cell)"
                 [attr.aria-label]="cellLabel(cell)"
                 [class.is-configured]="mode() === 'configure' && cell.selected"
+                [class.is-correct]="
+                  mode() === 'revealed' && cell.revealOutcome === 'correct-unselected'
+                "
+                [class.is-hit]="mode() === 'revealed' && cell.revealOutcome === 'hit'"
+                [class.is-miss]="mode() === 'revealed' && cell.revealOutcome === 'miss'"
                 [class.is-red]="cell.ownership === 'red'"
                 [class.is-blue]="cell.ownership === 'blue'"
                 [class.is-shared]="cell.ownership === 'shared'"
@@ -95,30 +100,6 @@
                       />
                     }
                   </span>
-                } @else if (mode() === 'configure' && cell.selected) {
-                  <span class="configured-marker" aria-hidden="true">
-                    <fa-icon [icon]="circleIcon" />
-                  </span>
-                }
-
-                @if (mode() === 'revealed') {
-                  @switch (cell.revealOutcome) {
-                    @case ('hit') {
-                      <span class="outcome-marker hit-marker" aria-hidden="true">
-                        <fa-icon [icon]="hitIcon" />
-                      </span>
-                    }
-                    @case ('miss') {
-                      <span class="outcome-marker miss-marker" aria-hidden="true">
-                        <fa-icon [icon]="missIcon" />
-                      </span>
-                    }
-                    @case ('correct-unselected') {
-                      <span class="outcome-marker correct-marker" aria-hidden="true">
-                        <fa-icon [icon]="circleIcon" />
-                      </span>
-                    }
-                  }
                 }
               </button>
             }

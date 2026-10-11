@@ -29,7 +29,7 @@
   width: min(
     100%,
     90rem,
-    calc(var(--configuration-board-max-height, 72dvh) * var(--image-aspect))
+    calc(var(--configuration-board-max-height, 56dvh) * var(--image-aspect))
   );
   overflow: visible;
 }
@@ -140,6 +140,21 @@
   text-shadow: 0 1px 3px #000, 0 0 2px #000;
 }
 
+.is-revealed .cell.is-correct {
+  background: rgba(255, 198, 55, 0.38);
+  box-shadow: inset 0 0 0 3px #ffd66b;
+}
+
+.is-revealed .cell.is-hit {
+  background: rgb(34 197 94 / 28%);
+  box-shadow: inset 0 0 0 3px #4ade80;
+}
+
+.is-revealed .cell.is-miss {
+  background: rgb(69 10 10 / 45%);
+  box-shadow: inset 0 0 0 3px #991b1b;
+}
+
 .cell[aria-disabled='true'] {
   cursor: not-allowed;
 }
@@ -153,26 +168,11 @@
   line-height: 1;
 }
 
-.ownership-marker,
-.outcome-marker,
-.configured-marker {
+.ownership-marker {
   position: absolute;
   display: grid;
   place-items: center;
   line-height: 0;
-}
-
-.outcome-marker,
-.configured-marker {
-  min-width: clamp(0.55rem, 4.8cqi, 1.15rem);
-  min-height: clamp(0.55rem, 4.8cqi, 1.15rem);
-  padding: 0.06rem 0.16rem;
-  border: 1px solid currentColor;
-  background: #0b1018;
-  color: #fff;
-  font-size: clamp(0.4rem, 2.5cqi, 0.9rem);
-  font-weight: 900;
-  line-height: 1;
 }
 
 .ownership-marker {
@@ -207,38 +207,13 @@
   color: var(--color-team-blue);
 }
 
-.outcome-marker {
-  right: 0.12rem;
-  top: 0.12rem;
-  border-radius: 50%;
-}
-
-.configured-marker {
-  right: 0.12rem;
-  bottom: 0.12rem;
-  border-radius: 50%;
-}
-
 .ownership-marker fa-icon,
-.outcome-marker fa-icon,
-.configured-marker fa-icon,
 .move-handle fa-icon,
 .resize-handle fa-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
-}
-
-.configured-marker,
-.correct-marker,
-.hit-marker {
-  color: #ffe07a;
-}
-
-.miss-marker {
-  color: #fff;
-  background: #53111c;
 }
 
 .cell:focus-visible {
@@ -273,19 +248,25 @@
 .move-handle {
   position: absolute;
   z-index: 6;
-  bottom: calc(100% + 0.35rem);
+  bottom: calc(100% + 0.25rem);
   left: 50%;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   width: max-content;
-  min-width: 6.4rem;
-  padding: 0.32rem 0.58rem;
+  min-width: 5.25rem;
+  min-height: 1.8rem;
+  padding: 0.2rem 0.42rem;
   border-radius: 999px;
   box-shadow: 0 0.18rem 0.65rem rgb(0 0 0 / 55%);
   cursor: grab;
+  font-size: 0.75rem;
   transform: translateX(-50%);
   white-space: nowrap;
+}
+
+.move-handle fa-icon {
+  font-size: 0.8rem;
 }
 
 .move-handle:active {
@@ -303,6 +284,15 @@
   box-shadow: 0 0.12rem 0.4rem rgb(0 0 0 / 65%);
   place-items: center;
   line-height: 0;
+}
+
+.resize-handle fa-icon {
+  display: grid;
+  width: 0.65rem;
+  height: 0.65rem;
+  font-size: 0.65rem;
+  line-height: 1;
+  place-items: center;
 }
 
 .resize-handle.north-west {
@@ -339,9 +329,7 @@
 @media (forced-colors: active) {
   .cell-grid,
   .cell,
-  .ownership-marker,
-  .outcome-marker,
-  .configured-marker {
+  .ownership-marker {
     border-color: CanvasText;
     forced-color-adjust: none;
   }
@@ -362,6 +350,13 @@
   .is-revealed .cell {
     background: transparent;
     color: CanvasText;
+  }
+
+  .is-revealed .cell.is-correct,
+  .is-revealed .cell.is-hit,
+  .is-revealed .cell.is-miss {
+    background: Highlight;
+    color: HighlightText;
   }
 
   .cell:focus-visible {

@@ -23,11 +23,9 @@ import {
   safeImageDimension,
 } from '../../models/game.models';
 import {
-  faCheck,
   faCircle,
   faPlus,
   faUpDownLeftRight,
-  faXmark,
 } from '../icons/game-icons';
 
 export type ImageGridMode = 'configure' | 'covered' | 'revealed';
@@ -82,8 +80,6 @@ export class ImageGrid {
   protected readonly moveIcon = faUpDownLeftRight;
   protected readonly resizeIcon = faPlus;
   protected readonly circleIcon = faCircle;
-  protected readonly hitIcon = faCheck;
-  protected readonly missIcon = faXmark;
   protected readonly resizeCorners = Object.keys(
     RESIZE_DIRECTIONS,
   ) as ResizeCorner[];

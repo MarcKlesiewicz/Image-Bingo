@@ -4,12 +4,7 @@ import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from './core/game-state.service';
 import { GameRoute } from './models/game.models';
-import { faCheck, faTableCellsLarge } from './shared/icons/game-icons';
-
-interface NavigationItem {
-  readonly label: string;
-  readonly route: GameRoute;
-}
+import { faTableCellsLarge } from './shared/icons/game-icons';
 
 @Component({
   selector: 'app-root',
@@ -18,17 +13,8 @@ interface NavigationItem {
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly faCheck = faCheck;
   protected readonly faTableCellsLarge = faTableCellsLarge;
   protected readonly game = inject(GameStateService);
-  protected readonly navigation: readonly NavigationItem[] = [
-    { label: 'Setup', route: 'setup' },
-    { label: 'Play', route: 'play' },
-    { label: 'Results', route: 'results' },
-  ];
-  protected readonly currentStageIndex = computed(() =>
-    this.navigation.findIndex((item) => item.route === this.game.routePhase()),
-  );
   protected readonly shellAnnouncement = computed(
     () => `${this.stageLabel(this.game.routePhase())} stage.`,
   );
@@ -45,15 +31,7 @@ export class App {
     event.returnValue = '';
   }
 
-  protected isCurrent(item: NavigationItem): boolean {
-    return item.route === this.game.routePhase();
-  }
-
-  protected isComplete(index: number): boolean {
-    return index < this.currentStageIndex();
-  }
-
   private stageLabel(route: GameRoute): string {
-    return this.navigation.find((item) => item.route === route)?.label ?? 'Game';
+    return { setup: 'Setup', play: 'Play', results: 'Results' }[route];
   }
 }

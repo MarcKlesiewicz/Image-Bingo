@@ -1,6 +1,11 @@
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<header class="app-header" [class.is-play-stage]="game.routePhase() === 'play'">
+<header
+  class="app-header"
+  [class.is-setup-stage]="game.routePhase() === 'setup'"
+  [class.is-play-stage]="game.routePhase() === 'play'"
+  [class.is-results-stage]="game.routePhase() === 'results'"
+>
   <a
     class="brand"
     [routerLink]="game.authoritativeRoute()"
@@ -9,40 +14,13 @@
     <fa-icon class="brand-icon" [icon]="faTableCellsLarge" aria-hidden="true" />
     <span>{{ headerTitle() }}</span>
   </a>
-
-  <nav aria-label="Game progress">
-    <ol>
-      @for (item of navigation; track item.route; let stageIndex = $index) {
-        <li [class.is-current]="isCurrent(item)" [class.is-complete]="isComplete(stageIndex)">
-          <span class="stage-number" aria-hidden="true">
-            @if (isComplete(stageIndex)) {
-              <fa-icon [icon]="faCheck" />
-            } @else {
-              {{ stageIndex + 1 }}
-            }
-          </span>
-          @if (isCurrent(item)) {
-            <a [routerLink]="'/' + item.route" aria-current="step">
-              {{ item.label }}
-              <span class="visually-hidden">, current stage</span>
-            </a>
-          } @else {
-            <span class="stage-label">
-              {{ item.label }}
-              <span class="visually-hidden">
-                {{ isComplete(stageIndex) ? ', completed stage' : ', upcoming stage' }}
-              </span>
-            </span>
-          }
-        </li>
-      }
-    </ol>
-  </nav>
 </header>
 
 <main
   id="main-content"
+  [class.is-setup-stage]="game.routePhase() === 'setup'"
   [class.is-play-stage]="game.routePhase() === 'play'"
+  [class.is-results-stage]="game.routePhase() === 'results'"
   tabindex="-1"
 >
   <router-outlet />
