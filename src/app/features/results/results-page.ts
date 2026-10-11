@@ -9,17 +9,30 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from '../../core/game-state.service';
 import { Winner } from '../../models/game.models';
+import {
+  faCaretUp,
+  faEquals,
+  faRotateLeft,
+  faSquare,
+  faTrophy,
+} from '../../shared/icons/game-icons';
 
 @Component({
   selector: 'app-results-page',
+  imports: [FaIconComponent],
   templateUrl: './results-page.html',
   styleUrl: './results-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResultsPage {
+  protected readonly faCaretUp = faCaretUp;
+  protected readonly faRotateLeft = faRotateLeft;
+  protected readonly faSquare = faSquare;
+  protected readonly faTrophy = faTrophy;
   protected readonly game = inject(GameStateService);
   private readonly router = inject(Router);
   private readonly resultsHeading =
@@ -36,10 +49,10 @@ export class ResultsPage {
     return labels[this.game.winner() ?? 'draw'];
   });
   protected readonly outcomeIcon = computed(() => {
-    const icons: Record<Winner, string> = {
-      red: '▲',
-      blue: '■',
-      draw: '=',
+    const icons = {
+      red: faCaretUp,
+      blue: faSquare,
+      draw: faEquals,
     };
     return icons[this.game.winner() ?? 'draw'];
   });

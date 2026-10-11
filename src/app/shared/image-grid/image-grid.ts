@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Grid, GridCell, GridRow } from '@angular/aria/grid';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import {
   CELL_COUNT,
@@ -21,6 +22,11 @@ import {
   normalizeGridPlacement,
   safeImageDimension,
 } from '../../models/game.models';
+import {
+  faCircle,
+  faPlus,
+  faUpDownLeftRight,
+} from '../icons/game-icons';
 
 export type ImageGridMode = 'configure' | 'covered' | 'revealed';
 export type ImageGridOwnership = 'none' | 'red' | 'blue' | 'shared';
@@ -39,7 +45,6 @@ export interface ImageGridCellView {
   readonly accessibleLabel: string;
 }
 
-const MINIMUM_CELL_SIZE = 40;
 const KEYBOARD_STEP = 0.01;
 const LARGE_KEYBOARD_STEP = 0.05;
 
@@ -66,12 +71,15 @@ interface PointerInteraction {
 
 @Component({
   selector: 'app-image-grid',
-  imports: [Grid, GridRow, GridCell],
+  imports: [Grid, GridRow, GridCell, FaIconComponent],
   templateUrl: './image-grid.html',
   styleUrl: './image-grid.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageGrid {
+  protected readonly moveIcon = faUpDownLeftRight;
+  protected readonly resizeIcon = faPlus;
+  protected readonly circleIcon = faCircle;
   protected readonly resizeCorners = Object.keys(
     RESIZE_DIRECTIONS,
   ) as ResizeCorner[];
@@ -161,14 +169,6 @@ export class ImageGrid {
       (this.activePlacement().size * Math.min(this.safeWidth(), this.safeHeight()) * 100) /
       this.safeHeight(),
   );
-  protected readonly minimumBoardWidth = computed(() => {
-    const ratio = this.numericAspectRatio();
-    return Math.ceil(
-      (GRID_SIZE * MINIMUM_CELL_SIZE * Math.max(1, ratio)) /
-        this.committedPlacement().size,
-    );
-  });
-
   /** Moves focus to the grid's current roving entry cell. */
   focusEntry(): void {
     const grid = this.gridElement()?.nativeElement;

@@ -2,6 +2,7 @@ export type Team = 'red' | 'blue';
 
 export type GamePhase =
   | 'setup'
+  | 'presentation'
   | 'guessing-first'
   | 'guessing-second'
   | 'ready-to-reveal'
@@ -18,7 +19,7 @@ export const CELL_NUMBERS = Array.from(
   { length: CELL_COUNT },
   (_, index) => index + 1,
 ) as readonly CellNumber[];
-export const MAX_GUESSES = 2;
+export const DEFAULT_GUESSES_PER_TEAM = 2;
 export const MAX_GAME_NAME_LENGTH = 48;
 export const MAX_TEAM_NAME_LENGTH = 32;
 export const DEFAULT_GRID_PLACEMENT_SIZE = 0.46;
@@ -167,6 +168,7 @@ export interface ImageImportSummary {
 interface SharedGameState {
   readonly gameName: string;
   readonly teamNames: TeamNames;
+  readonly guessesPerTeam: number;
   readonly deck: readonly DeckImage[];
   readonly configurationIndex: number | null;
   readonly importPending: boolean;
@@ -181,8 +183,14 @@ export interface SetupGameState extends SharedGameState {
   readonly round: null;
 }
 
+export interface PresentationGameState extends SharedGameState {
+  readonly phase: 'presentation';
+  readonly currentImageIndex: null;
+  readonly round: null;
+}
+
 export interface ActiveGameState extends SharedGameState {
-  readonly phase: PlayPhase;
+  readonly phase: Exclude<PlayPhase, 'presentation'>;
   readonly currentImageIndex: number;
   readonly round: RoundSelection;
 }
@@ -193,4 +201,8 @@ export interface FinishedGameState extends SharedGameState {
   readonly round: null;
 }
 
-export type GameState = SetupGameState | ActiveGameState | FinishedGameState;
+export type GameState =
+  | SetupGameState
+  | PresentationGameState
+  | ActiveGameState
+  | FinishedGameState;

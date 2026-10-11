@@ -1,31 +1,15 @@
-<div class="board-scroll" tabindex="-1">
-  @if (mode() === 'configure') {
-    <div
-      class="placement-toolbar"
-      [style.min-width.px]="minimumBoardWidth()"
-    >
-      <button
-        type="button"
-        class="move-handle"
-        aria-label="Move bingo grid. Use arrow keys to move; hold Shift for larger steps."
-        (pointerdown)="beginMove($event)"
-        (pointermove)="updatePointerInteraction($event)"
-        (pointerup)="finishPointerInteraction($event)"
-        (pointercancel)="cancelPointerInteraction($event)"
-        (keydown)="moveWithKeyboard($event)"
-      >
-        <span aria-hidden="true">✥</span> Move grid
-      </button>
-    </div>
-  }
-
+<div
+  class="board-scroll"
+  [class.is-configuring]="mode() === 'configure'"
+  tabindex="-1"
+>
   <div
     #board
     class="image-board"
+    [class.is-configuring]="mode() === 'configure'"
     [class.is-covered]="mode() === 'covered'"
     [class.is-revealed]="mode() === 'revealed'"
     [style.aspect-ratio]="aspectRatio()"
-    [style.min-width.px]="mode() === 'configure' ? minimumBoardWidth() : null"
     [style.--image-aspect]="numericAspectRatio()"
   >
     <img
@@ -44,6 +28,22 @@
       [style.width.%]="placementWidth()"
       [style.height.%]="placementHeight()"
     >
+      @if (mode() === 'configure') {
+        <button
+          type="button"
+          class="move-handle"
+          aria-label="Move bingo grid. Use arrow keys to move; hold Shift for larger steps."
+          (pointerdown)="beginMove($event)"
+          (pointermove)="updatePointerInteraction($event)"
+          (pointerup)="finishPointerInteraction($event)"
+          (pointercancel)="cancelPointerInteraction($event)"
+          (keydown)="moveWithKeyboard($event)"
+        >
+          <fa-icon [icon]="moveIcon" aria-hidden="true" />
+          <span>Move grid</span>
+        </button>
+      }
+
       <div
         #grid
         class="cell-grid"
@@ -73,6 +73,11 @@
                 [selected]="isSelected(cell)"
                 [attr.aria-label]="cellLabel(cell)"
                 [class.is-configured]="mode() === 'configure' && cell.selected"
+                [class.is-correct]="
+                  mode() === 'revealed' && cell.revealOutcome === 'correct-unselected'
+                "
+                [class.is-hit]="mode() === 'revealed' && cell.revealOutcome === 'hit'"
+                [class.is-miss]="mode() === 'revealed' && cell.revealOutcome === 'miss'"
                 [class.is-red]="cell.ownership === 'red'"
                 [class.is-blue]="cell.ownership === 'blue'"
                 [class.is-shared]="cell.ownership === 'shared'"
@@ -83,28 +88,18 @@
                 @if (cell.ownership !== 'none') {
                   <span class="ownership-marker" aria-hidden="true">
                     @if (cell.ownership === 'red' || cell.ownership === 'shared') {
-                      <span class="ownership-dot red-ownership"></span>
+                      <fa-icon
+                        class="ownership-dot red-ownership"
+                        [icon]="circleIcon"
+                      />
                     }
                     @if (cell.ownership === 'blue' || cell.ownership === 'shared') {
-                      <span class="ownership-dot blue-ownership"></span>
+                      <fa-icon
+                        class="ownership-dot blue-ownership"
+                        [icon]="circleIcon"
+                      />
                     }
                   </span>
-                } @else if (mode() === 'configure' && cell.selected) {
-                  <span class="ownership-marker configured-marker" aria-hidden="true">●</span>
-                }
-
-                @if (mode() === 'revealed') {
-                  @switch (cell.revealOutcome) {
-                    @case ('hit') {
-                      <span class="outcome-marker hit-marker" aria-hidden="true">✓</span>
-                    }
-                    @case ('miss') {
-                      <span class="outcome-marker miss-marker" aria-hidden="true">×</span>
-                    }
-                    @case ('correct-unselected') {
-                      <span class="outcome-marker correct-marker" aria-hidden="true">●</span>
-                    }
-                  }
                 }
               </button>
             }
@@ -127,7 +122,9 @@
               (pointerup)="finishPointerInteraction($event)"
               (pointercancel)="cancelPointerInteraction($event)"
               (keydown)="resizeWithKeyboard($event, corner)"
-            ></button>
+            >
+              <fa-icon [icon]="resizeIcon" aria-hidden="true" />
+            </button>
           }
         </div>
       }

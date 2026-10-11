@@ -1,154 +1,176 @@
-<article class="game-page" aria-labelledby="round-heading">
-  <app-scoreboard
-    [redScore]="game.scores().red"
-    [blueScore]="game.scores().blue"
-    [redName]="game.redTeamName()"
-    [blueName]="game.blueTeamName()"
-    [currentRound]="roundNumber()"
-    [totalRounds]="totalRounds()"
-    [starter]="scoreboardStarter()"
-    [activeTeam]="game.activeTeam()"
-    [redLocked]="game.redLocked()"
-    [blueLocked]="game.blueLocked()"
-  />
-
+<article
+  class="game-page"
+  [attr.aria-labelledby]="game.phase() === 'presentation' ? 'presentation-heading' : 'round-heading'"
+>
   <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true">
     {{ liveAnnouncement() }}
   </p>
 
-  @if (game.currentGameImage(); as image) {
-    <h1 id="round-heading" #roundHeading class="visually-hidden" tabindex="-1">
-      Round {{ roundNumber() }}: {{ image.name }}
-    </h1>
-
-    <section
-      class="game-console"
-      aria-label="Round {{ roundNumber() }} game board and controls"
-    >
-      <div class="board-panel">
-        <div class="board-meta">
-          <span>Image {{ roundNumber() }} of {{ totalRounds() }}</span>
-          <strong [title]="image.name">{{ image.name }}</strong>
-        </div>
-
-        <app-image-grid
-          [imageId]="image.id"
-          [url]="image.url"
-          [alt]="image.name"
-          [intrinsicWidth]="image.width"
-          [intrinsicHeight]="image.height"
-          [placement]="image.gridPlacement"
-          [mode]="game.phase() === 'revealed' ? 'revealed' : 'covered'"
-          [cells]="gridCells()"
-          (cellActivated)="toggleGuess($event)"
-        />
-      </div>
-
-      <aside
-        class="round-sidebar"
-        [class.red-turn]="game.activeTeam() === 'red'"
-        [class.blue-turn]="game.activeTeam() === 'blue'"
-        [class.ready-turn]="game.phase() === 'ready-to-reveal'"
-        [class.revealed-turn]="game.phase() === 'revealed'"
-        aria-labelledby="turn-title"
-        aria-describedby="turn-guidance"
-      >
-        <div class="turn-summary">
-          <p class="turn-kicker">
-            @if (game.activeTeam(); as activeTeam) {
-              {{ activeTeamLabel() }} turn · {{ game.activeSelections().length }}/2 selected
-            } @else if (game.phase() === 'ready-to-reveal') {
-              Both teams locked
-            } @else {
-              Round complete
-            }
-          </p>
-          <h2 id="turn-title">{{ turnTitle() }}</h2>
-          <p id="turn-guidance">{{ turnGuidance() }}</p>
-        </div>
-
-        @if (game.phase() !== 'revealed') {
-          <section class="control-panel" aria-label="Round controls">
-            @if (game.activeTeam(); as activeTeam) {
-              <div class="selection-readout">
-                <span>{{ teamLabel(activeTeam) }} guesses</span>
-                <strong>{{ cellList(game.activeSelections()) }}</strong>
-                <small>{{ game.activeSelections().length }} of 2 selected</small>
-              </div>
-
-              <button
-                type="button"
-                class="primary-action lock-action"
-                [disabled]="!game.canLock()"
-                aria-describedby="turn-guidance"
-                (click)="lockGuesses()"
-              >
-                Lock guesses
-              </button>
-            } @else if (game.phase() === 'ready-to-reveal') {
-              <div class="selection-readout ready-readout">
-                <span>Four guesses locked</span>
-                <strong>Ready</strong>
-                <small>Reveal scores this round once.</small>
-              </div>
-
-              <button
-                #revealButton
-                type="button"
-                class="primary-action reveal-action"
-                [disabled]="!game.canReveal()"
-                (click)="revealRound()"
-              >
-                Reveal image
-              </button>
-            }
-          </section>
-        }
-
-        @if (game.currentCompletedRound(); as result) {
-          <section class="round-result" aria-labelledby="result-heading">
-            <div class="result-summary">
-              <h2 id="result-heading" #resultHeading tabindex="-1">Round result</h2>
-              <p>Correct: <strong>{{ cellList(result.correctCells) }}</strong></p>
-            </div>
-
-            <div class="team-results">
-              <article class="team-result red-result">
-                <span [title]="game.redTeamName()">{{ game.redTeamName() }}</span>
-                <strong>+{{ result.red.points }}</strong>
-                <small>Hits {{ cellList(result.red.hits) }} · Misses {{ cellList(result.red.misses) }}</small>
-              </article>
-
-              <article class="team-result blue-result">
-                <span [title]="game.blueTeamName()">{{ game.blueTeamName() }}</span>
-                <strong>+{{ result.blue.points }}</strong>
-                <small>Hits {{ cellList(result.blue.hits) }} · Misses {{ cellList(result.blue.misses) }}</small>
-              </article>
-            </div>
-
-            @if (result.correctUnselected.length > 0) {
-              <p class="unguessed-correct">
-                Not guessed: <strong>{{ cellList(result.correctUnselected) }}</strong>
-              </p>
-            }
-
-            @if (game.canAdvance()) {
-              <button type="button" class="primary-action next-action" (click)="nextRound()">
-                Next image <span aria-hidden="true">→</span>
-              </button>
-            } @else if (game.canFinish()) {
-              <button type="button" class="primary-action results-action" (click)="viewResults()">
-                View results
-              </button>
-            }
-          </section>
-        }
-      </aside>
+  @if (game.phase() === 'presentation') {
+    <section class="presentation-screen" aria-describedby="presentation-matchup">
+      <p class="presentation-kicker">Get ready to play</p>
+      <h1 id="presentation-heading" #presentationHeading tabindex="-1">
+        {{ game.gameName() }}
+      </h1>
+      <p id="presentation-matchup" class="presentation-matchup">
+        <strong class="red-team">{{ game.redTeamName() }}</strong>
+        <span>vs</span>
+        <strong class="blue-team">{{ game.blueTeamName() }}</strong>
+      </p>
+      <button type="button" class="primary-action start-game-action" (click)="beginGame()">
+        <fa-icon [icon]="playIcon" aria-hidden="true" />
+        Let’s go
+      </button>
     </section>
   } @else {
-    <section class="missing-round" role="alert">
-      <h1>No playable image</h1>
-      <p>The game state no longer has a current image. Return to setup and start again.</p>
-    </section>
+    <app-scoreboard
+      [redScore]="game.scores().red"
+      [blueScore]="game.scores().blue"
+      [redName]="game.redTeamName()"
+      [blueName]="game.blueTeamName()"
+      [currentRound]="roundNumber()"
+      [totalRounds]="totalRounds()"
+      [starter]="scoreboardStarter()"
+      [activeTeam]="game.activeTeam()"
+      [redLocked]="game.redLocked()"
+      [blueLocked]="game.blueLocked()"
+    />
+
+    @if (game.currentGameImage(); as image) {
+      <h1 id="round-heading" #roundHeading class="visually-hidden" tabindex="-1">
+        Round {{ roundNumber() }}: {{ image.name }}
+      </h1>
+
+      <section
+        class="game-console"
+        aria-label="Round {{ roundNumber() }} game board and controls"
+      >
+        <div class="board-panel">
+          <app-image-grid
+            [imageId]="image.id"
+            [url]="image.url"
+            [alt]="image.name"
+            [intrinsicWidth]="image.width"
+            [intrinsicHeight]="image.height"
+            [placement]="image.gridPlacement"
+            [mode]="game.phase() === 'revealed' ? 'revealed' : 'covered'"
+            [cells]="gridCells()"
+            (cellActivated)="toggleGuess($event)"
+          />
+        </div>
+
+        <aside
+          class="round-sidebar"
+          [class.red-turn]="game.activeTeam() === 'red'"
+          [class.blue-turn]="game.activeTeam() === 'blue'"
+          [class.ready-turn]="game.phase() === 'ready-to-reveal'"
+          [class.revealed-turn]="game.phase() === 'revealed'"
+          aria-labelledby="turn-title"
+          aria-describedby="turn-guidance"
+        >
+          <div class="turn-summary">
+            <p class="turn-kicker">
+              @if (game.activeTeam(); as activeTeam) {
+                {{ activeTeamLabel() }} turn · {{ game.activeSelections().length }}/{{ game.guessesPerTeam() }} selected
+              } @else if (game.phase() === 'ready-to-reveal') {
+                Both teams locked
+              } @else {
+                Round complete
+              }
+            </p>
+            <h2 id="turn-title">{{ turnTitle() }}</h2>
+            <p id="turn-guidance">{{ turnGuidance() }}</p>
+          </div>
+
+          @if (game.phase() !== 'revealed') {
+            <section class="control-panel" aria-label="Round controls">
+              @if (game.activeTeam(); as activeTeam) {
+                <div class="selection-readout">
+                  <span>{{ teamLabel(activeTeam) }} guesses</span>
+                  <strong>{{ cellList(game.activeSelections()) }}</strong>
+                  <small>
+                    {{ game.activeSelections().length }} of {{ game.guessesPerTeam() }} selected
+                  </small>
+                </div>
+
+                <button
+                  type="button"
+                  class="primary-action lock-action"
+                  [disabled]="!game.canLock()"
+                  aria-describedby="turn-guidance"
+                  (click)="lockGuesses()"
+                >
+                  Lock guesses
+                </button>
+              } @else if (game.phase() === 'ready-to-reveal') {
+                <div class="selection-readout ready-readout">
+                  <span>
+                    {{ totalLockedGuesses() }} {{ guessNoun(totalLockedGuesses()) }} locked
+                  </span>
+                  <strong>Ready</strong>
+                  <small>Reveal scores this round once.</small>
+                </div>
+
+                <button
+                  #revealButton
+                  type="button"
+                  class="primary-action reveal-action"
+                  [class.is-counting]="countdown() !== null"
+                  [disabled]="!game.canReveal() || countdown() !== null"
+                  (click)="revealRound()"
+                >
+                  {{ revealButtonText() }}
+                </button>
+              }
+            </section>
+          }
+
+          @if (game.currentCompletedRound(); as result) {
+            <section class="round-result" aria-labelledby="result-heading">
+              <div class="result-summary">
+                <h2 id="result-heading" #resultHeading tabindex="-1">Round result</h2>
+                <p>Correct: <strong>{{ cellList(result.correctCells) }}</strong></p>
+              </div>
+
+              <div class="team-results">
+                <article class="team-result red-result">
+                  <span [title]="game.redTeamName()">{{ game.redTeamName() }}</span>
+                  <strong>+{{ result.red.points }}</strong>
+                  <small>Hits {{ cellList(result.red.hits) }} · Misses {{ cellList(result.red.misses) }}</small>
+                </article>
+
+                <article class="team-result blue-result">
+                  <span [title]="game.blueTeamName()">{{ game.blueTeamName() }}</span>
+                  <strong>+{{ result.blue.points }}</strong>
+                  <small>Hits {{ cellList(result.blue.hits) }} · Misses {{ cellList(result.blue.misses) }}</small>
+                </article>
+              </div>
+
+              @if (result.correctUnselected.length > 0) {
+                <p class="unguessed-correct">
+                  Not guessed: <strong>{{ cellList(result.correctUnselected) }}</strong>
+                </p>
+              }
+
+              @if (game.canAdvance()) {
+                <button type="button" class="primary-action next-action" (click)="nextRound()">
+                  Next image
+                  <fa-icon [icon]="arrowRightIcon" aria-hidden="true" />
+                </button>
+              } @else if (game.canFinish()) {
+                <button type="button" class="primary-action results-action" (click)="viewResults()">
+                  View results
+                </button>
+              }
+            </section>
+          }
+        </aside>
+      </section>
+    } @else {
+      <section class="missing-round" role="alert">
+        <h1 id="round-heading">No playable image</h1>
+        <p>The game state no longer has a current image. Return to setup and start again.</p>
+      </section>
+    }
   }
 </article>

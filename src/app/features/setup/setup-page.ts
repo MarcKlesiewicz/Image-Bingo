@@ -9,9 +9,11 @@ import {
   viewChildren,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 
 import { GameStateService } from '../../core/game-state.service';
 import {
+  CELL_COUNT,
   CELL_NUMBERS,
   CellNumber,
   GridPlacement,
@@ -20,13 +22,22 @@ import {
   Team,
 } from '../../models/game.models';
 import {
+  faArrowDown,
+  faArrowLeft,
+  faArrowRight,
+  faArrowUp,
+  faPlay,
+  faTableCellsLarge,
+  faTrashCan,
+} from '../../shared/icons/game-icons';
+import {
   ImageGrid,
   ImageGridCellView,
 } from '../../shared/image-grid/image-grid';
 
 @Component({
   selector: 'app-setup-page',
-  imports: [ImageGrid],
+  imports: [FaIconComponent, ImageGrid],
   templateUrl: './setup-page.html',
   styleUrl: './setup-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,10 +51,25 @@ export class SetupPage {
     viewChild<ElementRef<HTMLHeadingElement>>('configurationHeading');
   private readonly incompleteButtons =
     viewChildren<ElementRef<HTMLButtonElement>>('incompleteButton');
-  private readonly setupNotice = signal('');
+  private readonly deckRows = viewChildren<ElementRef<HTMLElement>>('deckRow');
+  protected readonly setupNotice = signal('');
+  protected readonly reorderStatus = signal('');
+  protected readonly guessError = signal('');
+  protected readonly setupReady = computed(
+    () => this.game.canStart() && !this.guessError(),
+  );
+
+  protected readonly arrowDownIcon = faArrowDown;
+  protected readonly arrowLeftIcon = faArrowLeft;
+  protected readonly arrowRightIcon = faArrowRight;
+  protected readonly arrowUpIcon = faArrowUp;
+  protected readonly playIcon = faPlay;
+  protected readonly tableCellsIcon = faTableCellsLarge;
+  protected readonly trashIcon = faTrashCan;
 
   protected readonly maxGameNameLength = MAX_GAME_NAME_LENGTH;
   protected readonly maxTeamNameLength = MAX_TEAM_NAME_LENGTH;
+  protected readonly maxGuessesPerTeam = CELL_COUNT;
   protected readonly deckCount = computed(() => this.game.deck().length);
   protected readonly hasDeck = computed(() => this.deckCount() > 0);
   protected readonly activeIndex = computed(() => this.game.configurationIndex());
@@ -81,6 +107,9 @@ export class SetupPage {
     if (this.game.importPending()) {
       return 'Wait while the selected images are checked.';
     }
+    if (this.guessError()) {
+      return this.guessError();
+    }
     if (!this.hasDeck()) {
       return 'Add at least one image to start the game.';
     }
@@ -90,7 +119,7 @@ export class SetupPage {
         incomplete === 1 ? 'image' : 'images'
       }.`;
     }
-    return 'The deck is ready. Start game opens round 1.';
+    return 'The deck is ready. Start game opens the presentation screen.';
   });
   protected readonly importStatus = computed(() => {
     if (this.game.importPending()) {
@@ -125,6 +154,61 @@ export class SetupPage {
 
   protected updateTeamName(team: Team, event: Event): void {
     this.game.setTeamName(team, (event.currentTarget as HTMLInputElement).value);
+  }
+
+  protected updateGuessesPerTeam(event: Event): void {
+    const input = event.currentTarget as HTMLInputElement;
+    const value = Number(input.value);
+    if (
+      input.value.trim() === '' ||
+      !/^\d+$/.test(input.value) ||
+      !Number.isInteger(value) ||
+      value < 1 ||
+      value > this.maxGuessesPerTeam
+    ) {
+      this.guessError.set(
+        `Enter a whole number from 1 to ${this.maxGuessesPerTeam}.`,
+      );
+      return;
+    }
+
+    this.guessError.set('');
+    this.game.setGuessesPerTeam(value);
+  }
+
+  protected handleDeckRowKeydown(
+    event: KeyboardEvent,
+    imageId: string,
+    imageName: string,
+  ): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.moveImage(imageId, imageName, 'earlier');
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.moveImage(imageId, imageName, 'later');
+    }
+  }
+
+  protected moveImage(
+    imageId: string,
+    imageName: string,
+    direction: 'earlier' | 'later',
+  ): void {
+    const nextIndex = this.game.moveImage(imageId, direction);
+    if (nextIndex === null) {
+      return;
+    }
+
+    this.reorderStatus.set(
+      `${imageName} moved to round ${nextIndex + 1} of ${this.deckCount()}.`,
+    );
+    queueMicrotask(() => {
+      this.deckRows().at(nextIndex)?.nativeElement.focus();
+    });
   }
 
   protected selectImage(index: number, focusHeading = false): void {
@@ -180,7 +264,7 @@ export class SetupPage {
 
   protected startGame(): void {
     this.setupNotice.set('');
-    if (!this.game.canStart()) {
+    if (!this.setupReady()) {
       this.setupNotice.set(this.startGuidance());
       const firstIncomplete = this.incompleteButtons().at(0)?.nativeElement;
       if (firstIncomplete !== undefined) {
