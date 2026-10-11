@@ -21,6 +21,9 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "assets": [
+              "src/favicon.svg"
+            ],
             "styles": [
               "src/styles.scss"
             ]
